@@ -1,0 +1,106 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "user": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "integer" },
+          "user_name": { "type": "string" },
+          "user_phone_no": { "type": "string" },
+          "user_email": { "type": "string", "format": "email" },
+          "user_age": { "type": "integer" },
+          "user_password": { "type": "string" }
+        },
+        "required": ["user_id", "user_name", "user_phone_no", "user_email", "user_age", "user_password"]
+      },
+      "patient": {
+        "type": "object",
+        "properties": {
+          "card_no": { "type": "string" },
+          "patient_name": { "type": "string" },
+          "patient_age": { "type": "integer" },
+          "patient_sex": { "type": "string" },
+          "patient_phone_no": { "type": "string" }
+        },
+        "required": ["card_no", "patient_name", "patient_age", "patient_sex", "patient_phone_no"]
+      },
+      "doctor": {
+        "type": "object",
+        "properties": {
+          "doctor_id": { "type": "integer" },
+          "doctor_name": { "type": "string" },
+          "doctor_age": { "type": "integer" },
+          "doctor_sex": { "type": "string" },
+          "specialization": { "type": "string" },
+          "doctor_email": { "type": "string", "format": "email" },
+          "doctor_phone_no": { "type": "string" }
+        },
+        "required": ["doctor_id", "doctor_name", "doctor_age", "doctor_sex", "specialization", "doctor_email", "doctor_phone_no"]
+      },
+      "patient_history": {
+        "type": "object",
+        "properties": {
+          "card_no": { "type": "string" },
+          "visits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "doctor_id": { "type": "integer" },
+                "prescription": { "type": "string", "format": "uri" }
+              },
+              "required": ["doctor_id", "prescription"]
+            }
+          },
+          "lab_reports": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "medicines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "medicine_id": { "type": "integer" },
+                "quantity": { "type": "integer" },
+                "time": { "type": "string" }
+              },
+              "required": ["medicine_id", "quantity", "time"]
+            }
+          }
+        },
+        "required": ["card_no", "visits", "lab_reports", "medicines"]
+      },
+      "vitals": {
+        "type": "object",
+        "properties": {
+          "patient_id": { "type": "integer" },
+          "sugar": { "type": "number" },
+          "bp": { "type": "string" },
+          "height": { "type": "number" },
+          "weight": { "type": "number" },
+          "ecg": { "type": "string", "format": "uri" }
+        },
+        "required": ["patient_id", "sugar", "bp", "height", "weight", "ecg"]
+      },
+      "medicine": {
+        "type": "object",
+        "properties": {
+          "medicine_id": { "type": "integer" },
+          "medicine_name": { "type": "string" },
+          "medicine_expiry_date": { "type": "string", "format": "date" }
+        },
+        "required": ["medicine_id", "medicine_name", "medicine_expiry_date"]
+      },
+      "inventory": {
+        "type": "object",
+        "properties": {
+          "medicine_id": { "type": "integer" },
+          "total_quantity": { "type": "integer" }
+        },
+        "required": ["medicine_id", "total_quantity"]
+      }
+    },
+    "required": ["user", "patient", "doctor", "patient_history", "vitals", "medicine", "inventory"]
+}  
