@@ -17,13 +17,14 @@
       "patient": {
         "type": "object",
         "properties": {
-          "card_no": { "type": "string" },
+          "book_no": { "type": "string" },
           "patient_name": { "type": "string" },
           "patient_age": { "type": "integer" },
           "patient_sex": { "type": "string" },
-          "patient_phone_no": { "type": "string" }
+          "patient_phone_no": { "type": "string" },
+          "patient_area": {"type" : "string"}
         },
-        "required": ["card_no", "patient_name", "patient_age", "patient_sex", "patient_phone_no"]
+        "required": ["book_no", "patient_name", "patient_age", "patient_sex", "patient_phone_no" , "patient_area" ]
       },
       "doctor": {
         "type": "object",
@@ -41,66 +42,91 @@
       "patient_history": {
         "type": "object",
         "properties": {
-          "card_no": { "type": "string" },
+          "book_no": { "type": "string" },
           "visits": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "doctor_id": { "type": "integer" },
-                "prescription": { "type": "string", "format": "uri" }
+                "timestamp": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}$"
+                },
+                "medicines": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "medicine_id": { "type": "string" },
+                      "quantity": { "type": "integer" }
+                    },
+                    "required": ["medicine_id", "quantity", "time"]
+                  }
+                }
               },
-              "required": ["doctor_id", "prescription"]
-            }
-          },
-          "lab_reports": {
-            "type": "array",
-            "items": { "type": "string", "format": "uri" }
-          },
-          "medicines": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "medicine_id": { "type": "integer" },
-                "quantity": { "type": "integer" },
-                "time": { "type": "string" }
-              },
-              "required": ["medicine_id", "quantity", "time"]
+              "required": ["doctor_id" , "timestamp", "medicines"]
             }
           }
         },
-        "required": ["card_no", "visits", "lab_reports", "medicines"]
+        "required": ["book_no", "visits"]
       },
       "vitals": {
         "type": "object",
         "properties": {
-          "patient_id": { "type": "integer" },
-          "sugar": { "type": "number" },
+          "book_no": { "type": "integer" },
+          "rbs": { "type": "number" },
           "bp": { "type": "string" },
           "height": { "type": "number" },
           "weight": { "type": "number" },
-          "ecg": { "type": "string", "format": "uri" }
+          "pulse" : { "type": "number" },
+          "extra_note": {"type" : "string"},
+          "timestamp": { 
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}$",
+            "description": "Month and year in YYYY-MM format"
+          }
         },
-        "required": ["patient_id", "sugar", "bp", "height", "weight", "ecg"]
-      },
-      "medicine": {
-        "type": "object",
-        "properties": {
-          "medicine_id": { "type": "integer" },
-          "medicine_name": { "type": "string" },
-          "medicine_expiry_date": { "type": "string", "format": "date" }
-        },
-        "required": ["medicine_id", "medicine_name", "medicine_expiry_date"]
+        "required": ["book_no", "rbs", "bp", "height", "weight", "timestamp" , "pulse"]
       },
       "inventory": {
         "type": "object",
         "properties": {
-          "medicine_id": { "type": "integer" },
-          "total_quantity": { "type": "integer" }
+          "medicine_id": { "type": "string" },
+          "medicine_formulation": { "type": "string" },
+          "total_quantity": { "type": "integer" },
+          "medicine_details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "medicine_name": { "type": "string" },
+              "expiry_date": { "type": "string", "format": "date" },
+              "quantity": { "type": "integer" }
+            },
+            "required": ["medicine_name", "expiry_date", "quantity"]
+          }
+         }
         },
-        "required": ["medicine_id", "total_quantity"]
+        "required": ["medicine_id", "medicine_name", "medicine_expiry_date" , "total_quantity"]
+      },
+      "medicine_category": {
+        "type": "object",
+        "properties": {
+          "category_name": { "type" : "string"} ,
+          "medicine_array" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "medicine_id" : { "type" : "string" }
+              },
+              "required" : ["medicine_id", "medicine_name", "medicine_price"]
+            }
+          }
+        }
       }
+
     },
     "required": ["user", "patient", "doctor", "patient_history", "vitals", "medicine", "inventory"]
 }  
