@@ -60,9 +60,19 @@
                     "type": "object",
                     "properties": {
                       "medicine_id": { "type": "string" },
-                      "quantity": { "type": "integer" }
+                      "quantity": { "type": "integer" },
+                      "dosage_schedule": {
+                        "type": "object",
+                        "properties": {
+                          "days": { "type": "integer" },
+                          "morning": { "type": "boolean" },
+                          "afternoon": { "type": "boolean" },
+                          "night": { "type": "boolean" }
+                        },
+                        "required": ["days", "morning", "afternoon", "night"]
+                      }
                     },
-                    "required": ["medicine_id", "quantity", "time"]
+                    "required": ["medicine_id", "quantity", "dosage_schedule"]
                   }
                 },
                 "medicines_given": {
