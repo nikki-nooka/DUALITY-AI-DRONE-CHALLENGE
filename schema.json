@@ -10,9 +10,10 @@
           "user_phone_no": { "type": "string" },
           "user_email": { "type": "string", "format": "email" },
           "user_age": { "type": "integer" },
-          "user_password": { "type": "string" }
+          "user_password": { "type": "string" },
+          "user_type" : { "type" : "string"}
         },
-        "required": ["user_id", "user_name", "user_phone_no", "user_email", "user_age", "user_password"]
+        "required": ["user_id", "user_name", "user_phone_no", "user_email", "user_age", "user_password" , "user_type"]
       },
       "patient": {
         "type": "object",
