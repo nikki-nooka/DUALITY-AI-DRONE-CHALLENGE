@@ -18,7 +18,7 @@
       "patient": {
         "type": "object",
         "properties": {
-          "book_no": { "type": "string" },
+          "book_no": { "type": "integer" },
           "patient_name": { "type": "string" },
           "patient_age": { "type": "integer" },
           "patient_sex": { "type": "string" },
@@ -43,7 +43,7 @@
       "patient_history": {
         "type": "object",
         "properties": {
-          "book_no": { "type": "string" },
+          "book_no": { "type": "integer" },
           "visits": {
             "type": "array",
             "items": {
