@@ -87,7 +87,7 @@
                   }
                 }
               },
-              "required": ["doctor_id" , "timestamp", "medicines_given" , "medicines_prescribed"]
+              "required": ["timestamp"]
             }
           }
         },

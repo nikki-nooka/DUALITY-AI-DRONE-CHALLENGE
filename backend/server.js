@@ -12,12 +12,15 @@ require('./models/patientHistoryModel');
 require('./models/vitalsModel');
 require('./models/doctorModel');
 
+const patientRoutes = require('./routes/patientRoutes');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 connectDB();
+
+app.use('/api', patientRoutes);
 
 const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
