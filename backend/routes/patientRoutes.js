@@ -3,7 +3,7 @@ const router = express.Router();
 const Patient = require('../models/patientModel');
 const PatientHistory = require('../models/patientHistoryModel');
 
-router.post('/patients', async (req, res) => {
+router.post('/', async (req, res) => {
   const { book_no, patient_name, patient_age, patient_sex, patient_phone_no, patient_area, oldNew, eid } = req.body;
     console.log ('Received data:', req.body)
   try {
