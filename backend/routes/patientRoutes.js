@@ -9,14 +9,23 @@ router.post('/patients', async (req, res) => {
   try {
     if (oldNew === 'old') {
       const existingPatient = await Patient.findOne({ book_no });
+      console.log('Existing patient:', existingPatient);
+
       if (existingPatient) {
         const patientHistory = await PatientHistory.findOne({ book_no });
+        console.log('Patient history:', patientHistory);
+
         if (patientHistory) {
-          patientHistory.visits.push({ doctor_id: eid, timestamp: new Date().toISOString().slice(0, 7) });
+          patientHistory.visits.push({timestamp: new Date().toISOString().slice(0, 7) });
           await patientHistory.save();
           return res.status(200).send({ message: 'Patient data found and visit updated' });
         } else {
-          return res.status(404).send({ message: 'Patient data not found. Make a new registration' });
+          const newPatientHistory = new PatientHistory({
+            book_no,
+            visits: [{ timestamp: new Date().toISOString().slice(0, 7) }]
+          });
+          await newPatientHistory.save();
+          return res.status(200).send({ message: 'Patient data found and visit updated' });
         }
       } else {
         return res.status(404).send({ message: 'Patient data not found. Make a new registration' });
@@ -34,7 +43,7 @@ router.post('/patients', async (req, res) => {
 
       const newPatientHistory = new PatientHistory({
         book_no,
-        visits: [{ doctor_id: eid, timestamp: new Date().toISOString().slice(0, 7) }]
+        visits: [{ timestamp: new Date().toISOString().slice(0, 7) }]
       });
       await newPatientHistory.save();
 
