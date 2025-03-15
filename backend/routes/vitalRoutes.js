@@ -4,22 +4,44 @@ const Vitals = require('../models/vitalsModel');
 
 router.post('/', async (req, res) => {
   const { book_no, rbs, bp, height, weight, pulse, extra_note } = req.body;
-    console.log ('Received data:', req.body)
+  console.log('Received data:', req.body);
+
+  const currentMonthYear = new Date().toISOString().slice(0, 7);
+
   try {
-    const newVitals = new Vitals({
-      book_no,
-      rbs: rbs || null,
-      bp: bp || null,
-      height: height || null,
-      weight: weight || null,
-      pulse: pulse || null,
-      extra_note: extra_note || null,
-      timestamp: new Date().toISOString().slice(0, 7)
-    });
-    await newVitals.save();
-    return res.status(201).send({ message: 'Vitals data saved successfully' });
+    // Check if an entry with the same book_no and timestamp already exists
+    let existingVitals = await Vitals.findOne({ book_no, timestamp: currentMonthYear });
+
+    if (existingVitals) {
+      // Update the existing entry
+      existingVitals.rbs = rbs || existingVitals.rbs;
+      existingVitals.bp = bp || existingVitals.bp;
+      existingVitals.height = height || existingVitals.height;
+      existingVitals.weight = weight || existingVitals.weight;
+      existingVitals.pulse = pulse || existingVitals.pulse;
+      existingVitals.extra_note = extra_note || existingVitals.extra_note;
+
+      await existingVitals.save();
+      return res.status(200).send({ message: 'Vitals data updated successfully' });
+    } else {
+      // Create a new entry
+      const newVitals = new Vitals({
+        book_no,
+        rbs: rbs || null,
+        bp: bp || null,
+        height: height || null,
+        weight: weight || null,
+        pulse: pulse || null,
+        extra_note: extra_note || null,
+        timestamp: currentMonthYear
+      });
+
+      await newVitals.save();
+      return res.status(201).send({ message: 'Vitals data saved successfully' });
+    }
   } catch (error) {
-    return res.status(400).send(error);
+    console.error('Error:', error);
+    return res.status(400).send({ message: error.message });
   }
 });
 
