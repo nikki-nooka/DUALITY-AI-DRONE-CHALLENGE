@@ -88,26 +88,78 @@ router.post('/add_volunteer', async (req, res) => {
 
 // update the medicine stock
 // request would have the medicine id and expiry_date,
-
 router.post('/update_medicine_stock', async (req, res) => {
-    const { medicine_id, expiry_date } = req.body;
-    const medicine = await Medicine.findone({ medicine_id });
-    if (!medicine) {
-        res.status(404).send('Medicine not found');
+    const { medicine_id, expiry_date, quantity } = req.body;
+    try {
+        const medicine = await Medicine.findOne({ medicine_id: medicine_id });
+        if (!medicine) {
+            return res.status(404).send('Medicine not found');
+        }
+
+        // Convert expiry_date string to date and find the matching entry
+        // This is more reliable than direct comparison
+        let found = false;
+        for (let i = 0; i < medicine.medicine_details.length; i++) {
+            const detail = medicine.medicine_details[i];
+            const detailDate = new Date(detail.expiry_date).toISOString().split('T')[0];
+            const requestDate = new Date(expiry_date).toISOString().split('T')[0];
+            
+            if (detailDate === requestDate) {
+                // Update the quantity
+                medicine.medicine_details[i].quantity = quantity;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            return res.status(404).send('Medicine with the expiry date not found');
+        }
+
+        // Recalculate total quantity
+        medicine.total_quantity = medicine.medicine_details.reduce(
+            (total, detail) => total + detail.quantity, 0
+        );
+
+        await medicine.save();
+        res.send(medicine);
+    } catch (error) {
+        console.error('Error updating medicine stock:', error);
+        res.status(500).send('Server error');
     }
-
-    // Find the exact expiry_date in the medicine_details array
-    const med = medicine.medicine_details.find((med) => med.expiry_date === expiry_date);
-    if (!med) {
-        res.status(404).send('Medicine with the expiry date not found');
-    }
-
-    // Update the quantity of the medicine
-    med.quantity = req.body.quantity;
-    await medicine.save();
-    res.send(medicine);
-
 });
+
+// add new medicine details
+router.post('/add_new_medicine_details', async (req, res) => {
+    const { medicine_id, medicine_name, expiry_date, quantity } = req.body;
+    
+    try {
+      // Find the medicine with the given ID
+      const medicine = await Medicine.findOne({ medicine_id });
+      if (!medicine) {
+        return res.status(404).send('Medicine not found');
+      }
+  
+      // Add the new entry to the medicine_details array
+      medicine.medicine_details.push({
+        medicine_name,
+        expiry_date,
+        quantity
+      });
+  
+      // Update the total quantity
+      medicine.total_quantity += quantity;
+  
+      // Save the updated medicine
+      await medicine.save();
+  
+      // Return the updated medicine
+      res.status(200).json(medicine);
+    } catch (error) {
+      console.error('Error adding medicine details:', error);
+      res.status(500).send('Server error');
+    }
+  });
 
 // Add a new medicine to the inventory and also update the medicine category
 const addMedicine = async (req, res) => {
