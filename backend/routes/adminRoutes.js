@@ -109,48 +109,78 @@ router.post('/update_medicine_stock', async (req, res) => {
 
 });
 
-// Add a new medicine to the inventory
-router.post('/add_new_medicine', async (req, res) => {
-    const { medicine_name, medicine_details , medicine_category } = req.body;
-    // create an unique id, which is not present in the db.
-
-    // Get all the medicine objects.
-    const medicines = await Medicine.find();
-    let medicine_id = 1;
-
-    // Find the id, which is available
-    while (medicines.find((medicine) => medicine.medicine_id === medicine_id)) {
-        medicine_id++;
-    }
-
-    const medicine = new Medicine({
-        medicine_name,
-        medicine_id,
-        medicine_details
-    });
+// Add a new medicine to the inventory and also update the medicine category
+const addMedicine = async (req, res) => {
     try {
-        await medicine.save();
-        // Now update the medicineCategory
-        const medicineCategory = await MedicineCategory.findOne({ category: medicine_category });
-        if (!medicineCategory) {
-            res.status(404).send('Medicine Category not found');
+        const {
+            medicine_formulation,
+            medicine_name,
+            expiry_date,
+            quantity
+        } = req.body;
+        console.log(req.body);
+
+        if (!medicine_formulation || !medicine_name || !expiry_date || !quantity) {
+            return res.status(400).json({ message: 'All fields are required' });
         }
-        medicineCategory.medicines.push(medicine_id);
-        await medicineCategory.save();
 
 
-        res.send(medicine);
+        // Check if medicine with this formulation already exists
+        const existingMedicine = await Medicine.findOne({ medicine_formulation });
+
+        if (existingMedicine) {
+            // // Add to existing medicine entry
+            // existingMedicine.medicine_details.push({
+            //     medicine_name,
+            //     expiry_date,
+            //     quantity
+            // });
+            // existingMedicine.total_quantity += quantity;
+
+            // await existingMedicine.save();
+            // return res.status(200).json({
+            //     message: 'Medicine added to existing inventory',
+            //     medicine: existingMedicine
+            // });
+            return res.status(400).json({ message: 'Medicine with this formulation already exists' });
+        } else {
+            // Generate a unique medicine_id, which is missing id number in the db
+            let medicine_id = 1;
+            const medicines = await Medicine.find();
+            while (medicines.find((medicine) => medicine.medicine_id === medicine_id.toString())) {
+                medicine_id++;
+            }
+            // Create new medicine entry
+            const newMedicine = new Medicine({
+                medicine_id: medicine_id.toString(),  // Convert to string to match schema
+                medicine_formulation,
+                total_quantity: quantity,
+                medicine_details: [{
+                    medicine_name,
+                    expiry_date,
+                    quantity
+                }]
+            });
+
+            await newMedicine.save();
+            return res.status(201).json({
+                message: 'New medicine added to inventory',
+                medicine: newMedicine
+            });
+        }
     } catch (error) {
-        console.log(error);
-        res.status(500).send('Error while adding a medicine');
+        console.error('Error adding medicine:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
-});
+};
+router.post('/add_new_medicine', addMedicine);
 
 
 // Get all the medicines in the inventory
 router.get('/get_medicines', async (req, res) => {
     try {
         const medicines = await Medicine.find();
+        console.log(medicines[0].medicine_details[0].expiry_date);
         res.json(medicines);
     } catch (error) {
         console.error(error);
@@ -188,6 +218,21 @@ router.get('/get_volunteers', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('Error retrieving volunteers');
+    }
+});
+
+// Get medicine based on id
+router.get('/get_medicine/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        const medicine = await Medicine.find({ medicine_id: id });
+        if (!medicine) {
+            res.status(404).send('Medicine not found');
+        }
+        res.json(medicine);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error retrieving medicine');
     }
 });
 
