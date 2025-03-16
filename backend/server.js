@@ -17,6 +17,8 @@ const vitalRoutes = require('./routes/vitalRoutes');
 // Integrate the new patient history routes for doctor prescription
 const patientHistoryRoutes = require('./routes/patientHistoryRoutes');
 const doctorAssignRoutes = require('./routes/doctorAssignRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
 
 const app = express();
 app.use(express.json());
@@ -28,6 +30,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/vitals', vitalRoutes);
 app.use('/api/patient-history', patientHistoryRoutes);
 app.use('/api/doctor-assign', doctorAssignRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
