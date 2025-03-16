@@ -36,9 +36,10 @@
           "doctor_sex": { "type": "string" },
           "specialization": { "type": "string" },
           "doctor_email": { "type": "string", "format": "email" },
-          "doctor_phone_no": { "type": "string" }
+          "doctor_phone_no": { "type": "string" },
+          "doctor_availability": { "type" : "boolean" }
         },
-        "required": ["doctor_id", "doctor_name", "doctor_age", "doctor_sex", "specialization", "doctor_email", "doctor_phone_no"]
+        "required": ["doctor_id", "doctor_name", "doctor_age", "doctor_sex", "specialization", "doctor_email", "doctor_phone_no" , "doctor_availability"]
       },
       "patient_history": {
         "type": "object",

@@ -9,6 +9,7 @@ const DoctorSchema = new mongoose.Schema({
     specialization: { type: String, required: true },
     doctor_email: { type: String, required: true, unique: true },
     doctor_phone_no: { type: String, required: true },
+    doctor_availability: { type: Boolean, required: true },
   });
   
 const Doctor = mongoose.model('Doctor', DoctorSchema);
