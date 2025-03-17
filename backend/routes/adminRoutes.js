@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/add_doctor', async (req, res) => {
-    const { name, email, phone, age, specialization, sex } = req.body;
+    const { doctor_name, doctor_email, doctor_phone_no, doctor_age, specialization, doctor_sex } = req.body;
 
     const doctors = await Doctor.find();
     let doctor_id = 1;
@@ -37,12 +37,12 @@ router.post('/add_doctor', async (req, res) => {
 
     const doctor = new Doctor({
         'doctor_id': doctor_id,
-        'doctor_name': name,
-        'doctor_email': email,
-        'doctor_age': age,
-        'doctor_phone_no': phone,
+        'doctor_name': doctor_name,
+        'doctor_email': doctor_email,
+        'doctor_age': doctor_age,
+        'doctor_phone_no': doctor_phone_no,
         'specialization': specialization,
-        'doctor_sex': sex,
+        'doctor_sex': doctor_sex,
         'doctor_availability': false
     })
 
