@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Medicine Category Schema
 const MedicineCategorySchema = new mongoose.Schema({
     category_name: { type: String, required: true },
     medicine_array: [{

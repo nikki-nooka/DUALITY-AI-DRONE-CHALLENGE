@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Inventory Schema
 const InventorySchema = new mongoose.Schema({
     medicine_id: { type: String, required: true, unique: true },
     medicine_formulation: { type: String, required: true },

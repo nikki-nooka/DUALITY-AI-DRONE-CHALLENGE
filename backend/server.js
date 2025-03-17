@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./db');
 
-// Initialize the models in the db
 require('./models/userModel');
 require('./models/patientModel');
 require('./models/medicineCategoryModel');
@@ -14,7 +13,6 @@ require('./models/doctorModel');
 
 const patientRoutes = require('./routes/patientRoutes');
 const vitalRoutes = require('./routes/vitalRoutes');
-// Integrate the new patient history routes for doctor prescription
 const patientHistoryRoutes = require('./routes/patientHistoryRoutes');
 const doctorAssignRoutes = require('./routes/doctorAssignRoutes');
 const adminRoutes = require('./routes/adminRoutes');

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Vitals Schema
 const VitalsSchema = new mongoose.Schema({
     book_no: { type: String, required: true },
     rbs: { type: Number },

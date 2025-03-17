@@ -9,11 +9,9 @@ router.post('/', async (req, res) => {
   const currentMonthYear = new Date().toISOString().slice(0, 7);
 
   try {
-    // Check if an entry with the same book_no and timestamp already exists
     let existingVitals = await Vitals.findOne({ book_no, timestamp: currentMonthYear });
 
     if (existingVitals) {
-      // Update the existing entry
       existingVitals.rbs = rbs || existingVitals.rbs;
       existingVitals.bp = bp || existingVitals.bp;
       existingVitals.height = height || existingVitals.height;
@@ -24,7 +22,6 @@ router.post('/', async (req, res) => {
       await existingVitals.save();
       return res.status(200).send({ message: 'Vitals data updated successfully' });
     } else {
-      // Create a new entry
       const newVitals = new Vitals({
         book_no,
         rbs: rbs || null,
