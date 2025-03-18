@@ -61,7 +61,6 @@ router.get('/medicine-pickup/:book_no', async (req, res) => {
       return res.status(404).json({ message: 'No medicines prescribed for this month.' });
     }
 
-    // Only show medicines that are still prescribed but NOT given
     const unpickedMedicines = visit.medicines_prescribed.filter(
       (med) => !visit.medicines_given.some((given) => given.medicine_id === med.medicine_id)
     );
@@ -94,14 +93,12 @@ router.post('/medicine-pickup', async (req, res) => {
       return res.status(404).json({ message: 'No prescription found for this month.' });
     }
 
-    // Fetch inventory to check stock availability
     const inventoryItems = await Inventory.find({
       medicine_id: { $in: medicinesGiven.map(med => med.medicine_id) }
     });
 
     let insufficientStock = [];
 
-    // Check stock availability
     for (let med of medicinesGiven) {
       const inventoryItem = inventoryItems.find(item => item.medicine_id === med.medicine_id);
 
@@ -117,7 +114,6 @@ router.post('/medicine-pickup', async (req, res) => {
       });
     }
 
-    // Deduct stock from inventory
     for (let med of medicinesGiven) {
       await Inventory.findOneAndUpdate(
         { medicine_id: med.medicine_id },
@@ -125,7 +121,6 @@ router.post('/medicine-pickup', async (req, res) => {
       );
     }
 
-    // Append the new medicines to `medicines_given` without removing `medicines_prescribed`
     visit.medicines_given.push(...medicinesGiven);
 
     await patientHistory.save();
