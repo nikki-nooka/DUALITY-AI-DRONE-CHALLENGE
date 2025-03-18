@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PatientHistory = require('../models/patientHistoryModel');
+const Inventory = require('../models/inventoryModel');
 
 router.post('/doctor-prescription', async (req, res) => {
   try {
@@ -32,7 +33,7 @@ router.post('/doctor-prescription', async (req, res) => {
           medicines_given: []
         });
       } else {
-        visit.medicines_prescribed = [...visit.medicines_prescribed, ...prescriptions];
+        visit.medicines_prescribed.push(...prescriptions);
       }
     }
 
@@ -43,7 +44,6 @@ router.post('/doctor-prescription', async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 router.get('/medicine-pickup/:book_no', async (req, res) => {
   try {
@@ -61,18 +61,22 @@ router.get('/medicine-pickup/:book_no', async (req, res) => {
       return res.status(404).json({ message: 'No medicines prescribed for this month.' });
     }
 
-    return res.status(200).json({ medicines_prescribed: visit.medicines_prescribed });
+    // Only show medicines that are still prescribed but NOT given
+    const unpickedMedicines = visit.medicines_prescribed.filter(
+      (med) => !visit.medicines_given.some((given) => given.medicine_id === med.medicine_id)
+    );
+
+    return res.status(200).json({ medicines_prescribed: unpickedMedicines });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 });
 
-
 router.post('/medicine-pickup', async (req, res) => {
   try {
     const { book_no, medicinesGiven } = req.body;
-    
+
     if (!book_no || !medicinesGiven || !Array.isArray(medicinesGiven)) {
       return res.status(400).json({ message: 'Invalid data provided' });
     }
@@ -84,28 +88,79 @@ router.post('/medicine-pickup', async (req, res) => {
     }
 
     const currentMonthYear = new Date().toISOString().slice(0, 7);
-    let visitIndex = patientHistory.visits.findIndex(visit => visit.timestamp === currentMonthYear);
+    let visit = patientHistory.visits.find(visit => visit.timestamp === currentMonthYear);
 
-    if (visitIndex === -1) {
+    if (!visit) {
       return res.status(404).json({ message: 'No prescription found for this month.' });
     }
 
-    patientHistory.visits[visitIndex].medicines_prescribed =
-      patientHistory.visits[visitIndex].medicines_prescribed.filter(
-        (med) => !medicinesGiven.some((given) => given.medicine_id === med.medicine_id)
-      );
+    // Fetch inventory to check stock availability
+    const inventoryItems = await Inventory.find({
+      medicine_id: { $in: medicinesGiven.map(med => med.medicine_id) }
+    });
 
-    patientHistory.visits[visitIndex].medicines_given.push(...medicinesGiven);
+    let insufficientStock = [];
+
+    // Check stock availability
+    for (let med of medicinesGiven) {
+      const inventoryItem = inventoryItems.find(item => item.medicine_id === med.medicine_id);
+
+      if (!inventoryItem || inventoryItem.total_quantity < med.quantity) {
+        insufficientStock.push(med.medicine_id);
+      }
+    }
+
+    if (insufficientStock.length > 0) {
+      return res.status(400).json({
+        message: 'Not enough stock for the following medicines',
+        insufficientStock
+      });
+    }
+
+    // Deduct stock from inventory
+    for (let med of medicinesGiven) {
+      await Inventory.findOneAndUpdate(
+        { medicine_id: med.medicine_id },
+        { $inc: { total_quantity: -med.quantity } }
+      );
+    }
+
+    // Append the new medicines to `medicines_given` without removing `medicines_prescribed`
+    visit.medicines_given.push(...medicinesGiven);
 
     await patientHistory.save();
 
-    return res.status(200).json({ message: 'Medicine pickup recorded successfully!' });
+    return res.status(200).json({ message: 'Medicine pickup confirmed, inventory updated, and patient history preserved!' });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 });
 
+router.get('/medicine-verification/:book_no', async (req, res) => {
+  try {
+    const { book_no } = req.params;
+    const currentMonthYear = new Date().toISOString().slice(0, 7);
 
+    const patientHistory = await PatientHistory.findOne({ book_no });
+
+    if (!patientHistory) {
+      return res.status(404).json({ message: 'No patient history found.' });
+    }
+
+    let visit = patientHistory.visits.find(visit => visit.timestamp === currentMonthYear);
+    if (!visit) {
+      return res.status(404).json({ message: 'No records found for this month.' });
+    }
+
+    return res.status(200).json({
+      medicines_prescribed: visit.medicines_prescribed,
+      medicines_given: visit.medicines_given
+    });
+  } catch (error) {
+    console.error('Error fetching verification data:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;
