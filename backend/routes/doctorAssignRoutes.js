@@ -1,11 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
-const PatientHistory = require('../models/patientHistoryModel');
 
+// Fetch all doctors
+router.get('/get_doctors', async (req, res) => {
+  try {
+    const doctors = await Doctor.find({});
+    res.status(200).json(doctors);
+  } catch (error) {
+    console.error('Error fetching doctors:', error);
+    res.status(500).json({ message: 'Error fetching doctors' });
+  }
+});
+
+// Assign a doctor to a patient
 router.post('/', async (req, res) => {
   const { book_no, doc_name } = req.body;
-  console.log('Received data:', req.body);
 
   try {
     const doctor = await Doctor.findOne({ doctor_name: doc_name });
