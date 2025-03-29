@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
-
+const PatientHistory = require('../models/patientHistoryModel');
 // Fetch all doctors
 router.get('/get_doctors', async (req, res) => {
   try {
-    const doctors = await Doctor.find({});
+    const doctors = await Doctor.find({}); // Fetch all doctors from the database
     res.status(200).json(doctors);
   } catch (error) {
     console.error('Error fetching doctors:', error);
