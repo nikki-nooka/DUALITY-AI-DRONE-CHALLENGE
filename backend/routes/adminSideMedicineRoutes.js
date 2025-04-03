@@ -141,35 +141,6 @@ router.get('/get_medicine/:id', async (req, res) => {
     }
 });
 
-// router.post('/update_medicine_expiry_date' , async(req , res) => {
-//     const medicine_id = req.body.medicine_id;
-//     const old_expiry_date = req.body.old_expiry_date;
-//     const new_expiry_date = req.body.new_expiry_date;
-
-//     console.log( medicine_id , old_expiry_date , new_expiry_date);
-
-//     const medicine = await Medicine.findOne({ medicine_id: medicine_id });
-//     if (!medicine) {
-//         res.status(404).send('Medicine not found');
-//     }
-
-//     let found = false;
-//     for (let i = 0; i < medicine.medicine_details.length; i++) {
-//         const detail = medicine.medicine_details[i];
-//         if (detail.expiry_date === old_expiry_date) {
-//             medicine.medicine_details[i].expiry_date = new_expiry_date;
-//             found = true;
-//             break;
-//         }
-//     }
-//     if (!found) {
-//         res.status(404).send('Medicine with the expiry date not found');
-//     }
-
-//     await medicine.save();
-//     // Send a message saying that the medicine has been updated
-//     res.json(message = 'Medicine Expiry Date updated successfully');
-// })
 router.post('/update_medicine_expiry_date', async(req, res) => {
     const medicine_id = req.body.medicine_id;
     const old_expiry_date = req.body.old_expiry_date;
@@ -209,5 +180,61 @@ router.post('/update_medicine_expiry_date', async(req, res) => {
         return res.status(500).send('Server error');
     }
 });
+
+router.post('/delete_medicine_batch' , async(req , res) => {
+    const medicine_id = req.body.medicine_id;
+    const expiry_date = req.body.expiry_date;
+
+    try {
+        const medicine = await Medicine.findOne({ medicine_id: medicine_id });
+        if (!medicine) {
+            return res.status(404).send('Medicine not found');
+        }
+
+        let found = false;
+        for (let i = 0; i < medicine.medicine_details.length; i++) {
+            const detail = medicine.medicine_details[i];
+            const detailDate = new Date(detail.expiry_date).toISOString().split('T')[0];
+            const requestDate = new Date(expiry_date).toISOString().split('T')[0];
+            
+            if (detailDate === requestDate) {
+                // Remove the medicine detail from the array
+                medicine.medicine_details.splice(i, 1);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            return res.status(404).send('Medicine with the expiry date not found');
+        }
+
+        medicine.total_quantity = medicine.medicine_details.reduce(
+            (total, detail) => total + detail.quantity, 0
+        );
+
+        await medicine.save();
+        res.send(medicine);
+    } catch (error) {
+        console.error('Error deleting medicine:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+router.post('/delete_medicine' , async(req , res) => {
+    const medicine_id = req.body.medicine_id ;
+    // Delete the medicine from the database with the given medicine_id
+    try {
+        const medicine = await Medicine.findOneAndDelete({ medicine_id: medicine_id });
+        if (!medicine) {
+            return res.status(404).send('Medicine not found');
+        }
+        res.send(medicine);
+    } catch (error) {
+        console.error('Error deleting medicine:', error);
+        res.status(500).send('Server error');
+    }
+
+}) ;
 
 module.exports = router;
