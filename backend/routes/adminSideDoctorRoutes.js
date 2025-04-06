@@ -17,14 +17,13 @@ router.post('/add_doctor', async (req, res) => {
         return res.status(400).send('Doctor with this phone number already exists');
     }
     
-    // Check if the doctor already exists using email
-    if(doctor_email){
+    // Only check for duplicate email if a non-empty email was provided
+    if(doctor_email && doctor_email.trim() !== ''){
         const existingDoctor1 = await Doctor.findOne({ doctor_email });
         if (existingDoctor1) {
             return res.status(400).send('Doctor with this email already exists');
         }
     }
-
 
     const doctors = await Doctor.find();
     let doctor_id = 1;
@@ -33,10 +32,15 @@ router.post('/add_doctor', async (req, res) => {
         doctor_id++;
     }
 
+    // Set email to null if it's empty or not provided
+    const sanitizedEmail = (doctor_email && doctor_email.trim() !== '') 
+        ? doctor_email.trim() 
+        : null;
+
     const doctor = new Doctor({
         'doctor_id': doctor_id,
         'doctor_name': doctor_name,
-        'doctor_email': doctor_email,
+        'doctor_email': sanitizedEmail,
         'doctor_age': doctor_age,
         'doctor_phone_no': doctor_phone_no,
         'specialization': specialization,
