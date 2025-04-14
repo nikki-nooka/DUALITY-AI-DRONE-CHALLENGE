@@ -4,7 +4,7 @@ const PatientHistorySchema = new mongoose.Schema({
     book_no: { type: String, required: true },
     visits: [{
       doctor_id: { type: Number },
-      timestamp: { type: String, required: true, match: /^\d{4}-\d{2}$/ },
+      timestamp: { type: Date },
       medicines_prescribed: [{ 
         medicine_id: String, 
         quantity: Number,

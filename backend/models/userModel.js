@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema({
     user_password: { type: String, required: true },
     user_type: { type: String, required: true },
     list_of_visits: [{
-      'timestamp': { type: Date, required: true },
+      timestamp: { type: Date, required: true },
     }]
   });
   
