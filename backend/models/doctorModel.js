@@ -10,7 +10,7 @@ const DoctorSchema = new mongoose.Schema({
     doctor_phone_no: { type: String, required: true, unique: true },
     doctor_availability: { type: Boolean, required: true },
     list_of_visits: [{
-      'timestamp': { type: Date, required: true },
+      timestamp: { type: Date, required: true },
     }]
   });
   
