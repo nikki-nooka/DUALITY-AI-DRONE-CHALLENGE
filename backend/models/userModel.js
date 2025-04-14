@@ -8,6 +8,9 @@ const UserSchema = new mongoose.Schema({
     user_age: { type: Number, required: true },
     user_password: { type: String, required: true },
     user_type: { type: String, required: true },
+    list_of_visits: [{
+      'timestamp': { type: Date, required: true },
+    }]
   });
   
 const User = mongoose.model('User', UserSchema);
