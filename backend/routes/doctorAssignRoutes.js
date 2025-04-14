@@ -5,7 +5,7 @@ const PatientHistory = require('../models/patientHistoryModel');
 // Fetch all doctors
 router.get('/get_doctors', async (req, res) => {
   try {
-    const doctors = await Doctor.find({}); // Fetch all doctors from the database
+    const doctors = await Doctor.find({doctor_availability: true}); // Fetch all doctors from the database
     res.status(200).json(doctors);
   } catch (error) {
     console.error('Error fetching doctors:', error);
