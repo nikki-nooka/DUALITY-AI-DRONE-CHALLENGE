@@ -83,7 +83,8 @@ router.post('/add_volunteer', async (req, res) => {
         email,
         phone,
         address,
-        password
+        password,
+        user_type: 'volunteer'
     });
     try {
         await volunteer.save();
