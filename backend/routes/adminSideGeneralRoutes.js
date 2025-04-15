@@ -76,24 +76,24 @@ router.post('/login', async (req, res) => {
 // }
 // );
 
-router.post('/add_volunteer', async (req, res) => {
-    const { name, email, phone, address, password } = req.body;
-    const volunteer = new User({
-        name,
-        email,
-        phone,
-        address,
-        password,
-        user_type: 'volunteer'
-    });
-    try {
-        await volunteer.save();
-        res.send(volunteer);
-    } catch (error) {
-        console.log(error);
-        res.status(500).send('Error while adding a volunteer');
-    }
-})
+// router.post('/add_volunteer', async (req, res) => {
+//     const { name, email, phone, address, password } = req.body;
+//     const volunteer = new User({
+//         name,
+//         email,
+//         phone,
+//         address,
+//         password,
+//         user_type: 'volunteer'
+//     });
+//     try {
+//         await volunteer.save();
+//         res.send(volunteer);
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).send('Error while adding a volunteer');
+//     }
+// })
 
 // router.post('/update_medicine_stock', async (req, res) => {
 //     const { medicine_id, expiry_date, quantity } = req.body;
