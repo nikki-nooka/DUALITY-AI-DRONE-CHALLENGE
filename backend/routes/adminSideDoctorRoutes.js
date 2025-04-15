@@ -88,4 +88,45 @@ router.get('/get_doctors', async (req, res) => {
     }
 });
 
+router.get('/get_doctor/:id', async (req, res) => {
+    const id = req.params.id;
+    const doctor = await Doctor.findById(id);
+    if (!doctor) {
+        res.status(404).send('Doctor not found');
+    }
+    console.log(doctor);
+    res.json(doctor);
+});
+
+router.put('/edit_doctor/:id', async (req, res) => {
+    try {
+        console.log("Got edit doctor request");
+        console.log(req.body);
+        const id = req.params.id;
+        
+        // Find the doctor by ID
+        const doctor = await Doctor.findById(id);
+        if (!doctor) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        
+        // Update fields from the request body
+        if (req.body.doctor_name) doctor.doctor_name = req.body.doctor_name;
+        if (req.body.doctor_email !== undefined) doctor.doctor_email = req.body.doctor_email;
+        if (req.body.doctor_age !== undefined) doctor.doctor_age = req.body.doctor_age;
+        if (req.body.doctor_phone_no) doctor.doctor_phone_no = req.body.doctor_phone_no;
+        if (req.body.specialization) doctor.specialization = req.body.specialization;
+        if (req.body.doctor_sex) doctor.doctor_sex = req.body.doctor_sex;
+        
+        // Save the updated doctor record
+        await doctor.save();
+        
+        // Return the updated doctor
+        res.status(200).json(doctor);
+    } catch (error) {
+        console.error("Error updating doctor:", error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 module.exports = router;
