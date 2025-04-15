@@ -9,7 +9,11 @@ const UserSchema = new mongoose.Schema({
     user_password: { type: String, required: true },
     user_type: { type: String, required: true },
     list_of_visits: [{
-      timestamp: { type: Date, required: true },
+      timestamp: { 
+        type: String, 
+        required: true, 
+        match: /^\d{4}-\d{2}$/ // Enforces YYYY-MM format
+      },
     }]
   });
   

@@ -10,7 +10,11 @@ const DoctorSchema = new mongoose.Schema({
     doctor_phone_no: { type: String, required: true, unique: true },
     doctor_availability: { type: Boolean, required: true },
     list_of_visits: [{
-      timestamp: { type: Date, required: true },
+      timestamp: { 
+        type: String, 
+        required: true, 
+        match: /^\d{4}-\d{2}$/ // Enforces YYYY-MM format
+      },
     }]
   });
   

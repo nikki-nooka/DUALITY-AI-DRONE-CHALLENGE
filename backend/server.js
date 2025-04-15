@@ -11,6 +11,9 @@ require('./models/patientHistoryModel');
 require('./models/vitalsModel');
 require('./models/doctorModel');
 
+// Middleware
+const loggingMiddleware = require('./middleware/loggingMiddleware');
+
 const patientRoutes = require('./routes/patientRoutes');
 const vitalRoutes = require('./routes/vitalRoutes');
 const patientHistoryRoutes = require('./routes/patientHistoryRoutes');
@@ -23,6 +26,7 @@ const adminSideDoctorRoutes = require('./routes/adminSideDoctorRoutes');
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(loggingMiddleware); // Apply logging middleware to all routes, to log all actions
 
 connectDB();
 

@@ -8,7 +8,11 @@ const VitalsSchema = new mongoose.Schema({
     weight: { type: Number },
     pulse: { type: Number },
     extra_note: { type: String },
-    timestamp: { type: Date  , required: true},
+    timestamp: { 
+      type: String, 
+      required: true, 
+      match: /^\d{4}-\d{2}$/ // Enforces YYYY-MM format
+    },
   });
   
 const Vitals = mongoose.model('Vitals', VitalsSchema);

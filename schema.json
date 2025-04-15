@@ -19,7 +19,7 @@
               "properties": {
                 "timestamp": {
                   "type": "string",
-                  "format": "date"
+                  "pattern": "^\\d{4}-\\d{2}$"
                 }
               }
             }
@@ -57,7 +57,7 @@
               "properties": {
                 "timestamp": {
                   "type": "string",
-                  "format": "date"
+                  "pattern": "^\\d{4}-\\d{2}$"
                 }
               }
             }
@@ -77,7 +77,7 @@
                 "doctor_id": { "type": "integer" },
                 "timestamp": {
                   "type": "string",
-                  "format": "date"
+                  "pattern": "^\\d{4}-\\d{2}$"
                 },
                 "medicines_prescribed": {
                   "type": "array",
@@ -128,11 +128,11 @@
           "weight": { "type": "number" },
           "pulse" : { "type": "number" },
           "extra_note": {"type" : "string"},
-          "timestamp": { 
-            "type": "string",
-            "format": "date",
-            "description": "The date when the vitals were recorded"
-          }
+          "timestamp": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}$",
+                  "description": "Timestamp of the vitals record in YYYY-MM format"
+                }
         },
         "required": ["book_no", "rbs", "bp", "height", "weight", "timestamp" , "pulse"]
       },
@@ -193,7 +193,7 @@
           }
         }
       },
-      "required": ["queue_id", "doctor_id", "patient_id", "timestamp"]
+      "required": ["queue_id", "doctor_id", "book_no"]
     },
     "log": {
       "type": "object",
