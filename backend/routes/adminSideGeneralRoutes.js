@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
 const Patient = require('../models/patientModel');
+const PatientHistory = require('../models/patientHistoryModel');
 const User = require('../models/userModel');
 const Medicine = require('../models/inventoryModel');
 const MedicineCategory = require('../models/medicineCategoryModel');
@@ -262,5 +263,70 @@ router.get('/get_volunteers', async (req, res) => {
 //         res.status(500).send('Error retrieving medicine');
 //     }
 // });
+
+router.get('/analytics', async (req, res) => {
+    try {
+        const { monthYear } = req.query;
+        console.log('Received request for analytics with monthYear:', monthYear);
+
+        if (!monthYear) {
+            return res.status(400).json({ message: 'Month and year are required' });
+        }
+
+        const patientHistories = await PatientHistory.find({
+            'visits': {
+                $elemMatch: {
+                    timestamp: {
+                        $regex: `^${monthYear}`
+                    }
+                }
+            }
+        });
+
+        const uniqueBookNos = [...new Set(patientHistories.map(history => history.book_no))];
+        
+        const patients = await Patient.find({
+            book_no: { $in: uniqueBookNos }
+        });
+
+        const genderCount = {
+            male: 0,
+            female: 0
+        };
+
+        const ageGroups = {
+            'under18': 0,
+            '18-30': 0,
+            '30-45': 0,
+            '45-60': 0,
+            'above60': 0
+        };
+
+        patients.forEach(patient => {
+            if (patient.patient_sex.toLowerCase() === 'male') {
+                genderCount.male++;
+            } else if (patient.patient_sex.toLowerCase() === 'female') {
+                genderCount.female++;
+            }
+
+            const age = parseInt(patient.patient_age);
+            if (age < 18) ageGroups.under18++;
+            else if (age >= 18 && age < 30) ageGroups['18-30']++;
+            else if (age >= 30 && age < 45) ageGroups['30-45']++;
+            else if (age >= 45 && age < 60) ageGroups['45-60']++;
+            else ageGroups.above60++;
+        });
+
+        res.json({
+            genderCount,
+            ageGroups,
+            totalPatients: patients.length
+        });
+
+    } catch (error) {
+        console.error('Error in analytics route:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 
 module.exports = router;
