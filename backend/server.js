@@ -21,7 +21,8 @@ const doctorAssignRoutes = require('./routes/doctorAssignRoutes');
 const adminSideGeneralRoutes = require('./routes/adminSideGeneralRoutes');
 const adminSideMedicineRoutes = require('./routes/adminSideMedicineRoutes');
 const adminSideDoctorRoutes = require('./routes/adminSideDoctorRoutes');
-const adminSideVolunteerRoutes = require('./routes/adminSideVolunteerRoutes'); // Add this line
+const adminSideVolunteerRoutes = require('./routes/adminSideVolunteerRoutes'); 
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 app.use(express.json());
@@ -37,7 +38,8 @@ app.use('/api/doctor-assign', doctorAssignRoutes);
 app.use('/api/admin', adminSideGeneralRoutes);
 app.use('/api/admin', adminSideMedicineRoutes);
 app.use('/api/admin', adminSideDoctorRoutes);
-app.use('/api/admin', adminSideVolunteerRoutes); // Add this line
+app.use('/api/admin', adminSideVolunteerRoutes); 
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

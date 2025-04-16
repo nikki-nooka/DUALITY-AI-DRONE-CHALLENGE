@@ -9,28 +9,50 @@ const User = require('../models/userModel');
  */
 router.post('/add_volunteer', async (req, res) => {
     try {
-        const { user_name, user_password, user_fullname, user_email, user_phone, user_address } = req.body;
+        const { 
+            user_name, 
+            user_phone_no, 
+            user_email, 
+            user_age,
+            user_password 
+        } = req.body;
         
         // Check if required fields are provided
-        if (!user_name || !user_password) {
-            return res.status(400).json({ message: 'Username and password are required' });
+        if (!user_name || !user_password || !user_phone_no || !user_email || !user_age) {
+            return res.status(400).json({ 
+                message: 'All fields are required: username, password, phone number, email, and age' 
+            });
         }
         
-        // Check if username already exists
-        const existingUser = await User.findOne({ user_name });
+        // Check if username or email already exists
+        const existingUser = await User.findOne({ 
+            $or: [{ user_name }, { user_email }] 
+        });
+        
         if (existingUser) {
-            return res.status(400).json({ message: 'Username already exists' });
+            if (existingUser.user_name === user_name) {
+                return res.status(400).json({ message: 'Username already exists' });
+            }
+            if (existingUser.user_email === user_email) {
+                return res.status(400).json({ message: 'Email already exists' });
+            }
         }
+        
+        // Generate auto-incremented user_id
+        // Find the highest user_id and increment by 1
+        const highestUser = await User.findOne().sort('-user_id');
+        const nextUserId = highestUser ? highestUser.user_id + 1 : 1;
         
         // Create new volunteer user
         const newVolunteer = new User({
+            user_id: nextUserId,
             user_name,
+            user_phone_no,
+            user_email,
+            user_age,
             user_password,
-            user_fullname: user_fullname || '',
-            user_email: user_email || '',
-            user_phone: user_phone || '',
-            user_address: user_address || '',
-            user_type: 'volunteer'
+            user_type: 'volunteer',
+            list_of_visits: [] // Initialize with empty visits array
         });
         
         await newVolunteer.save();
@@ -57,7 +79,8 @@ router.post('/add_volunteer', async (req, res) => {
 router.get('/get_volunteers', async (req, res) => {
     try {
         const volunteers = await User.find({ user_type: 'volunteer' })
-            .select('-user_password'); // Exclude password from results
+            .select('-user_password') // Exclude password from results
+            .sort('user_id'); // Sort by user_id
         
         res.status(200).json(volunteers);
     } catch (error) {
@@ -92,7 +115,7 @@ router.get('/get_volunteer/:id', async (req, res) => {
 });
 
 /**
- * @route   DELETE /api/admin/delete_volunteers
+ * @route   POST /api/admin/delete_volunteers
  * @desc    Delete multiple volunteers
  * @access  Admin
  */
@@ -124,7 +147,7 @@ router.post('/delete_volunteers', async (req, res) => {
 });
 
 /**
- * @route   DELETE /api/admin/delete_volunteer/:id
+ * @route   POST /api/admin/delete_volunteer/:id
  * @desc    Delete a specific volunteer
  * @access  Admin
  */
@@ -150,7 +173,7 @@ router.post('/delete_volunteer/:id', async (req, res) => {
 });
 
 /**
- * @route   PUT /api/admin/edit_volunteer/:id
+ * @route   POST /api/admin/edit_volunteer/:id
  * @desc    Update a volunteer's information
  * @access  Admin
  */
@@ -167,22 +190,29 @@ router.post('/edit_volunteer/:id', async (req, res) => {
         }
         
         // Fields that can be updated
-        const { user_fullname, user_email, user_phone, user_address, user_password } = req.body;
+        const { user_name, user_phone_no, user_email, user_age, user_password } = req.body;
+        
+        // Check if email exists if trying to change it
+        if (user_email && user_email !== volunteer.user_email) {
+            const existingUser = await User.findOne({ user_email });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Email already exists' });
+            }
+        }
         
         // Check if username exists if trying to change it
-        if (req.body.user_name && req.body.user_name !== volunteer.user_name) {
-            const existingUser = await User.findOne({ user_name: req.body.user_name });
+        if (user_name && user_name !== volunteer.user_name) {
+            const existingUser = await User.findOne({ user_name });
             if (existingUser) {
                 return res.status(400).json({ message: 'Username already exists' });
             }
-            volunteer.user_name = req.body.user_name;
         }
         
         // Update only provided fields
-        if (user_fullname !== undefined) volunteer.user_fullname = user_fullname;
-        if (user_email !== undefined) volunteer.user_email = user_email;
-        if (user_phone !== undefined) volunteer.user_phone = user_phone;
-        if (user_address !== undefined) volunteer.user_address = user_address;
+        if (user_name) volunteer.user_name = user_name;
+        if (user_phone_no) volunteer.user_phone_no = user_phone_no;
+        if (user_email) volunteer.user_email = user_email;
+        if (user_age) volunteer.user_age = user_age;
         if (user_password) volunteer.user_password = user_password;
         
         // Save updated volunteer
