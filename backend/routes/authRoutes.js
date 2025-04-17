@@ -10,6 +10,17 @@ router.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({ user_name, user_password, user_type });
         if (user) {
+            // For admin and volunteer on login update the list of visits if not already present
+            const currentMonthYear = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+                
+            // Check if the current month-year already exists in the list
+            const visitExists = user.list_of_visits.some(visit => visit.timestamp === currentMonthYear);
+                
+            if (!visitExists) {
+                user.list_of_visits.push({ timestamp: currentMonthYear });
+                await user.save();
+            }
+
             const token = jwt.sign({ id: user._id, user_type: user.user_type }, 'your_jwt_secret');
             res.status(200).json({ message: 'Login successful', token });
         } else {
