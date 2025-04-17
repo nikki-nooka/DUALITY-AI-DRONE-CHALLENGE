@@ -2,7 +2,7 @@ const moongoose = require('mongoose');
 const Log = require('../models/logModel');
 const User = require('../models/userModel');
 
-const loggingMiddleware = async (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
     // try {
     //     const user_id = req.body.user_id;
     //     const action = req.method + ' ' + req.originalUrl;
@@ -36,4 +36,4 @@ const loggingMiddleware = async (req, res, next) => {
     next();
 }
 
-module.exports = loggingMiddleware;
+module.exports = authMiddleware;
