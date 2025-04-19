@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Vitals = require('../models/vitalsModel');
+const { logUserAction } = require('../utils/logger');
 
 router.post('/', async (req, res) => {
   const { book_no, rbs, bp, height, weight, pulse, extra_note } = req.body;
@@ -12,6 +13,17 @@ router.post('/', async (req, res) => {
     let existingVitals = await Vitals.findOne({ book_no, timestamp: currentMonthYear });
 
     if (existingVitals) {
+      // Track the original values for logging changes
+      const originalValues = {
+        rbs: existingVitals.rbs,
+        bp: existingVitals.bp,
+        height: existingVitals.height,
+        weight: existingVitals.weight,
+        pulse: existingVitals.pulse,
+        extra_note: existingVitals.extra_note
+      };
+      
+      // Update existing vitals
       existingVitals.rbs = rbs || existingVitals.rbs;
       existingVitals.bp = bp || existingVitals.bp;
       existingVitals.height = height || existingVitals.height;
@@ -20,8 +32,44 @@ router.post('/', async (req, res) => {
       existingVitals.extra_note = extra_note || existingVitals.extra_note;
 
       await existingVitals.save();
+      
+      // Determine what fields were changed for logging
+      let changesDescription = [];
+      if (rbs && originalValues.rbs !== existingVitals.rbs) 
+        changesDescription.push(`RBS from "${originalValues.rbs || 'none'}" to "${existingVitals.rbs}"`);
+      
+      if (bp && originalValues.bp !== existingVitals.bp) 
+        changesDescription.push(`BP from "${originalValues.bp || 'none'}" to "${existingVitals.bp}"`);
+      
+      if (height && originalValues.height !== existingVitals.height) 
+        changesDescription.push(`Height from "${originalValues.height || 'none'}" to "${existingVitals.height}"`);
+      
+      if (weight && originalValues.weight !== existingVitals.weight) 
+        changesDescription.push(`Weight from "${originalValues.weight || 'none'}" to "${existingVitals.weight}"`);
+      
+      if (pulse && originalValues.pulse !== existingVitals.pulse) 
+        changesDescription.push(`Pulse from "${originalValues.pulse || 'none'}" to "${existingVitals.pulse}"`);
+      
+      if (extra_note && originalValues.extra_note !== existingVitals.extra_note) 
+        changesDescription.push(`Notes updated`);
+      
+      // Log the vitals update
+      if (req._user && req._user.id) {
+        let logMessage = `Updated vitals for patient (Book #${book_no}) for ${currentMonthYear}`;
+        
+        // Add details about what changed
+        if (changesDescription.length > 0) {
+          logMessage += ` - Changed: ${changesDescription.join(', ')}`;
+        } else {
+          logMessage += ` - No values changed`;
+        }
+        
+        await logUserAction(req._user.id, logMessage);
+      }
+      
       return res.status(200).send({ message: 'Vitals data updated successfully' });
     } else {
+      // Create new vitals record
       const newVitals = new Vitals({
         book_no,
         rbs: rbs || null,
@@ -34,6 +82,31 @@ router.post('/', async (req, res) => {
       });
 
       await newVitals.save();
+      
+      // Build a list of recorded vitals for logging
+      let recordedVitals = [];
+      if (rbs) recordedVitals.push(`RBS: ${rbs}`);
+      if (bp) recordedVitals.push(`BP: ${bp}`);
+      if (height) recordedVitals.push(`Height: ${height}`);
+      if (weight) recordedVitals.push(`Weight: ${weight}`);
+      if (pulse) recordedVitals.push(`Pulse: ${pulse}`);
+      
+      // Log the new vitals record
+      if (req._user && req._user.id) {
+        let logMessage = `Recorded new vitals for patient (Book #${book_no}) for ${currentMonthYear}`;
+        
+        // Add details about what was recorded
+        if (recordedVitals.length > 0) {
+          logMessage += ` - Recorded: ${recordedVitals.join(', ')}`;
+        }
+        
+        if (extra_note) {
+          logMessage += ` - Added clinical notes`;
+        }
+        
+        await logUserAction(req._user.id, logMessage);
+      }
+      
       return res.status(201).send({ message: 'Vitals data saved successfully' });
     }
   } catch (error) {

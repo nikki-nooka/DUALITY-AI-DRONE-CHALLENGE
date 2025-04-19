@@ -1,5 +1,6 @@
 const moongoose = require('mongoose');
 const express = require('express');
+const { logUserAction } = require('../utils/logger');
 
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
@@ -233,20 +234,44 @@ const MedicineCategory = require('../models/medicineCategoryModel');
 router.get('/get_patients', async (req, res) => {
     try {
         const patients = await Patient.find();
-        res.json(patients);
+        
+        // Log the action
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Retrieved list of all patients (count: ${patients.length})`);
+        }
+        
+        return res.json(patients);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error retrieving patients');
+        
+        // Log the error
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Error retrieving patients: ${error.message}`);
+        }
+        
+        return res.status(500).send('Error retrieving patients');
     }
 });
 
 router.get('/get_volunteers', async (req, res) => {
     try {
         const volunteers = await User.find({ user_type: 'volunteer' });
-        res.json(volunteers);
+        
+        // Log the action
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Retrieved list of all volunteers (count: ${volunteers.length})`);
+        }
+        
+        return res.json(volunteers);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error retrieving volunteers');
+        
+        // Log the error
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Error retrieving volunteers: ${error.message}`);
+        }
+        
+        return res.status(500).send('Error retrieving volunteers');
     }
 });
 
@@ -270,6 +295,11 @@ router.get('/analytics', async (req, res) => {
         console.log('Received request for analytics with monthYear:', monthYear);
 
         if (!monthYear) {
+            // Log the validation error
+            if (req._user && req._user.id) {
+                await logUserAction(req._user.id, `Analytics request failed: Month and year are required`);
+            }
+            
             return res.status(400).json({ message: 'Month and year are required' });
         }
 
@@ -317,15 +347,28 @@ router.get('/analytics', async (req, res) => {
             else ageGroups.above60++;
         });
 
-        res.json({
+        const analyticsData = {
             genderCount,
             ageGroups,
             totalPatients: patients.length
-        });
+        };
+
+        // Log the successful analytics request
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Retrieved analytics data for period ${monthYear} (${patients.length} patients)`);
+        }
+
+        return res.json(analyticsData);
 
     } catch (error) {
         console.error('Error in analytics route:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        
+        // Log the error
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Error retrieving analytics for ${req.query.monthYear}: ${error.message}`);
+        }
+        
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 

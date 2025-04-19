@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const PatientHistory = require('../models/patientHistoryModel');
 const Inventory = require('../models/inventoryModel');
+const { logUserAction } = require('../utils/logger');
 
 router.post('/doctor-prescription', async (req, res) => {
   try {
@@ -13,8 +14,11 @@ router.post('/doctor-prescription', async (req, res) => {
 
     const currentMonthYear = new Date().toISOString().slice(0, 7);
     let patientHistory = await PatientHistory.findOne({ book_no });
+    let isNewPatient = false;
+    let isNewVisit = false;
 
     if (!patientHistory) {
+      isNewPatient = true;
       patientHistory = new PatientHistory({
         book_no,
         visits: [{
@@ -27,6 +31,7 @@ router.post('/doctor-prescription', async (req, res) => {
       let visit = patientHistory.visits.find(visit => visit.timestamp === currentMonthYear);
       
       if (!visit) {
+        isNewVisit = true;
         patientHistory.visits.push({
           timestamp: currentMonthYear,
           medicines_prescribed: prescriptions,
@@ -38,6 +43,28 @@ router.post('/doctor-prescription', async (req, res) => {
     }
 
     await patientHistory.save();
+    
+    // Log the prescription action
+    if (req._user && req._user.id) {
+      // Create a summary of prescribed medicines
+      const medicinesSummary = prescriptions.map(med => 
+        `${med.medicine_id} (Qty: ${med.quantity})`
+      ).join(', ');
+      
+      let actionDescription = `Added prescription for patient (Book #${book_no}) - Medicines: ${medicinesSummary}`;
+      
+      // Add context about whether this is a new patient or visit
+      if (isNewPatient) {
+        actionDescription += ' - Created new patient history record';
+      } else if (isNewVisit) {
+        actionDescription += ' - Created new visit for existing patient';
+      } else {
+        actionDescription += ' - Updated existing prescription';
+      }
+      
+      await logUserAction(req._user.id, actionDescription);
+    }
+    
     return res.status(200).json({ message: 'Prescription added successfully!' });
   } catch (error) {
     console.error('Error in doctor prescription route:', error);
@@ -89,6 +116,14 @@ router.get('/medicine-pickup/:book_no', async (req, res) => {
           batches
         };
       });
+      
+    // Log the medicine pickup info retrieval
+    if (req._user && req._user.id) {
+      await logUserAction(
+        req._user.id,
+        `Retrieved medicine pickup information for patient (Book #${book_no}) - ${unpickedMedicines.length} unpicked medicine(s)`
+      );
+    }
 
     return res.status(200).json({ medicines_prescribed: unpickedMedicines });
   } catch (error) {
@@ -162,6 +197,17 @@ router.post('/medicine-pickup', async (req, res) => {
       });
     }
 
+    // Create a list of medicine details for logging
+    const medicineDetails = medicinesGiven.map(med => {
+      const inventoryItem = inventoryItems.find(item => item.medicine_id === med.medicine_id);
+      return {
+        name: med.medicine_name || inventoryItem?.medicine_formulation || med.medicine_id,
+        id: med.medicine_id,
+        quantity: med.quantity,
+        expiry: new Date(med.expiry_date).toISOString().split('T')[0]
+      };
+    });
+
     // Update inventory
     for (let med of medicinesGiven) {
       const inventoryItem = inventoryItems.find(item => item.medicine_id === med.medicine_id);
@@ -190,6 +236,18 @@ router.post('/medicine-pickup', async (req, res) => {
 
     visit.medicines_given.push(...formattedMedicinesGiven);
     await patientHistory.save();
+    
+    // Log the medicine dispensing action
+    if (req._user && req._user.id) {
+      const medicinesSummary = medicineDetails.map(med => 
+        `${med.name} (ID: ${med.id}, Qty: ${med.quantity}, Exp: ${med.expiry})`
+      ).join(', ');
+      
+      await logUserAction(
+        req._user.id,
+        `Dispensed medicines to patient (Book #${book_no}) - ${medicinesGiven.length} medicine(s): ${medicinesSummary}`
+      );
+    }
 
     return res.status(200).json({ message: 'Medicine pickup confirmed, inventory updated, and patient history preserved!' });
   } catch (error) {
@@ -212,6 +270,17 @@ router.get('/medicine-verification/:book_no', async (req, res) => {
     let visit = patientHistory.visits.find(visit => visit.timestamp === currentMonthYear);
     if (!visit) {
       return res.status(404).json({ message: 'No records found for this month.' });
+    }
+    
+    // Log the verification check
+    if (req._user && req._user.id) {
+      const prescribedCount = visit.medicines_prescribed ? visit.medicines_prescribed.length : 0;
+      const dispensedCount = visit.medicines_given ? visit.medicines_given.length : 0;
+      
+      await logUserAction(
+        req._user.id,
+        `Verified medicine dispensing for patient (Book #${book_no}) - ${prescribedCount} prescribed, ${dispensedCount} dispensed`
+      );
     }
 
     return res.status(200).json({

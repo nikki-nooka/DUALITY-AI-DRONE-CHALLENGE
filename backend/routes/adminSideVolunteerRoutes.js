@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/userModel');
+const { logUserAction } = require('../utils/logger');
 
 /**
  * @route   POST /api/admin/add_volunteer
@@ -57,17 +58,25 @@ router.post('/add_volunteer', async (req, res) => {
         
         await newVolunteer.save();
         
+        // Log successful volunteer creation
+        if (req._user && req._user.id) {
+            await logUserAction(
+                req._user.id, 
+                `Added new volunteer: ${user_name} (ID: ${nextUserId}, Email: ${user_email})`
+            );
+        }
+        
         // Return success without sending back the password
         const volunteerResponse = newVolunteer.toObject();
         delete volunteerResponse.user_password;
         
-        res.status(201).json({
+        return res.status(201).json({
             message: 'Volunteer created successfully',
             volunteer: volunteerResponse
         });
     } catch (error) {
         console.error('Error adding volunteer:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
@@ -82,10 +91,18 @@ router.get('/get_volunteers', async (req, res) => {
             .select('-user_password') // Exclude password from results
             .sort('user_id'); // Sort by user_id
         
-        res.status(200).json(volunteers);
+        // Log successful retrieval
+        if (req._user && req._user.id) {
+            await logUserAction(
+                req._user.id, 
+                `Retrieved list of all volunteers (${volunteers.length} records)`
+            );
+        }
+        
+        return res.status(200).json(volunteers);
     } catch (error) {
         console.error('Error fetching volunteers:', error);
-        res.status(500).json({ message: 'Error retrieving volunteers', error: error.message });
+        return res.status(500).json({ message: 'Error retrieving volunteers', error: error.message });
     }
 });
 
@@ -107,10 +124,18 @@ router.get('/get_volunteer/:id', async (req, res) => {
             return res.status(400).json({ message: 'User is not a volunteer' });
         }
         
-        res.status(200).json(volunteer);
+        // Log successful retrieval
+        if (req._user && req._user.id) {
+            await logUserAction(
+                req._user.id, 
+                `Retrieved volunteer details: ${volunteer.user_name} (ID: ${volunteer.user_id})`
+            );
+        }
+        
+        return res.status(200).json(volunteer);
     } catch (error) {
         console.error('Error fetching volunteer:', error);
-        res.status(500).json({ message: 'Error retrieving volunteer', error: error.message });
+        return res.status(500).json({ message: 'Error retrieving volunteer', error: error.message });
     }
 });
 
@@ -127,6 +152,12 @@ router.post('/delete_volunteers', async (req, res) => {
             return res.status(400).json({ message: 'Valid volunteer IDs array is required' });
         }
         
+        // Get volunteer info before deleting for logging purposes
+        const volunteersToDelete = await User.find({
+            _id: { $in: ids },
+            user_type: 'volunteer'
+        }).select('user_name user_id');
+        
         const result = await User.deleteMany({
             _id: { $in: ids },
             user_type: 'volunteer'
@@ -136,13 +167,22 @@ router.post('/delete_volunteers', async (req, res) => {
             return res.status(404).json({ message: 'No volunteers found with the provided IDs' });
         }
         
-        res.status(200).json({
+        // Log successful bulk deletion
+        if (req._user && req._user.id) {
+            const volunteerNames = volunteersToDelete.map(v => `${v.user_name} (ID: ${v.user_id})`).join(', ');
+            await logUserAction(
+                req._user.id, 
+                `Deleted ${result.deletedCount} volunteers: ${volunteerNames}`
+            );
+        }
+        
+        return res.status(200).json({
             message: `${result.deletedCount} volunteers deleted successfully`,
             deletedCount: result.deletedCount
         });
     } catch (error) {
         console.error('Error deleting volunteers:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
@@ -163,12 +203,23 @@ router.post('/delete_volunteer/:id', async (req, res) => {
             return res.status(400).json({ message: 'User is not a volunteer' });
         }
         
+        const volunteerName = volunteer.user_name;
+        const volunteerId = volunteer.user_id;
+        
         await User.findByIdAndDelete(req.params.id);
         
-        res.status(200).json({ message: 'Volunteer deleted successfully' });
+        // Log successful deletion
+        if (req._user && req._user.id) {
+            await logUserAction(
+                req._user.id, 
+                `Deleted volunteer: ${volunteerName} (ID: ${volunteerId})`
+            );
+        }
+        
+        return res.status(200).json({ message: 'Volunteer deleted successfully' });
     } catch (error) {
         console.error('Error deleting volunteer:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
@@ -188,6 +239,14 @@ router.post('/edit_volunteer/:id', async (req, res) => {
         if (volunteer.user_type !== 'volunteer') {
             return res.status(400).json({ message: 'User is not a volunteer' });
         }
+        
+        // Store original values for logging changes
+        const originalValues = {
+            user_name: volunteer.user_name,
+            user_phone_no: volunteer.user_phone_no,
+            user_email: volunteer.user_email,
+            user_age: volunteer.user_age
+        };
         
         // Fields that can be updated
         const { user_name, user_phone_no, user_email, user_age, user_password } = req.body;
@@ -218,17 +277,47 @@ router.post('/edit_volunteer/:id', async (req, res) => {
         // Save updated volunteer
         await volunteer.save();
         
+        // Prepare log message showing what changed
+        let changesDescription = [];
+        
+        if (originalValues.user_name !== volunteer.user_name) 
+            changesDescription.push(`username from "${originalValues.user_name}" to "${volunteer.user_name}"`);
+        
+        if (originalValues.user_email !== volunteer.user_email) 
+            changesDescription.push(`email from "${originalValues.user_email}" to "${volunteer.user_email}"`);
+        
+        if (originalValues.user_age !== volunteer.user_age) 
+            changesDescription.push(`age from "${originalValues.user_age}" to "${volunteer.user_age}"`);
+        
+        if (originalValues.user_phone_no !== volunteer.user_phone_no) 
+            changesDescription.push(`phone from "${originalValues.user_phone_no}" to "${volunteer.user_phone_no}"`);
+        
+        if (user_password) 
+            changesDescription.push(`password was updated`);
+        
+        // Log successful update with specific changes
+        if (req._user && req._user.id) {
+            const changesText = changesDescription.length ? 
+                ` - Changed: ${changesDescription.join(', ')}` : 
+                ` - No fields changed`;
+                
+            await logUserAction(
+                req._user.id, 
+                `Updated volunteer: ${volunteer.user_name} (ID: ${volunteer.user_id})${changesText}`
+            );
+        }
+        
         // Return updated volunteer without password
         const volunteerResponse = volunteer.toObject();
         delete volunteerResponse.user_password;
         
-        res.status(200).json({
+        return res.status(200).json({
             message: 'Volunteer updated successfully',
             volunteer: volunteerResponse
         });
     } catch (error) {
         console.error('Error updating volunteer:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 

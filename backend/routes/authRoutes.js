@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const { logUserAction } = require('../utils/logger');
 
 router.post('/login', async (req, res) => {
     const { user_name, user_password, user_type } = req.body;
@@ -21,8 +22,12 @@ router.post('/login', async (req, res) => {
                 await user.save();
             }
 
+            //Remember that your using the user._id i.e., the MongoDB ObjectId as the id in the JWT token
             const token = jwt.sign({ id: user._id, user_type: user.user_type }, 'your_jwt_secret');
+            // Log the successful login action
+            const logEntry = await logUserAction(user._id, 'Login successful');
             res.status(200).json({ message: 'Login successful', token });
+
         } else {
             res.status(401).json({ message: 'Invalid credentials' });
         }

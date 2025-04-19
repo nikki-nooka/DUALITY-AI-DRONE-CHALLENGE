@@ -1,39 +1,47 @@
-const moongoose = require('mongoose');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const Log = require('../models/logModel');
 const User = require('../models/userModel');
 
 const authMiddleware = async (req, res, next) => {
-    // try {
-    //     const user_id = req.body.user_id;
-    //     const action = req.method + ' ' + req.originalUrl;
-    //     const now = new Date();
-    //     const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    try {
+        // Get token from header
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1]; // Extract token from "Bearer TOKEN"
+        
+        // Skip token validation for login/public routes
+        if (req.path === '/api/auth/login' || req.method === 'OPTIONS') {
+            return next();
+        }
+        
+        // If no token for protected routes
+        if (!token) {
+            // Just log and continue for now to maintain compatibility
+            console.log("No auth token provided");
+            return next();
+            // Uncomment below to enforce authentication
+            // return res.status(401).json({ message: 'No token, authorization denied' });
+        }
 
-    //     if(!user_id) {
-    //         return res.status(400).json({ message: 'User ID is required' });
-    //     }
-
-    //     // Check if the user_id is valid (exists in the database)
-    //     const user = await User.findOne({ user_id: user_id });
-    //     if (!user) {
-    //         return res.status(404).json({ message: 'User not found' });
-    //     }
-
-    //     // Log the action
-    //     const logEntry = new Log({
-    //         user_id: user_id,
-    //         action: action,
-    //         timestamp: timestamp
-    //     });
-    //     await logEntry.save();
-
-    // } catch (error) {
-    //     console.error('Logging error:', error);
-    //     res.status(500).json({ message: 'Internal server error' });
-    //     return; // Prevent further execution
-    // }
-    
-    next();
-}
+        // Verify token
+        jwt.verify(token, 'your_jwt_secret', (err, decoded) => {
+            if (err) {
+                console.log("Invalid token:", err.message);
+                // Just log for now to maintain compatibility
+                return next();
+                // Uncomment below to enforce valid tokens
+                // return res.status(401).json({ message: 'Token is not valid' });
+            }
+            
+            // Add user from payload to request
+            req._user = decoded;
+            console.log("Authenticated user:", decoded);
+            next();
+        });
+    } catch (error) {
+        console.error("Auth middleware error:", error);
+        next(); // Continue to maintain compatibility
+    }
+};
 
 module.exports = authMiddleware;
