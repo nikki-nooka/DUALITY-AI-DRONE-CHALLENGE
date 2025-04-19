@@ -67,16 +67,33 @@ router.delete('/delete_doctor/:id', async (req, res) => {
 });
 
 router.put('/update_doctor_availability/:id', async (req, res) => {
-    const id = req.params.id;
-    const doctor = await Doctor.findById(id);
-    if (!doctor) {
-        res.status(404).send('Doctor not found');
+    const { id } = req.params;
+    const { doctor_availability } = req.body;
+
+    try {
+        const doctor = await Doctor.findById(id);
+        if (!doctor) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+
+        // Update availability
+        doctor.doctor_availability = doctor_availability;
+
+        // If marking as available, append the current month and year to list_of_visits
+        if (doctor_availability) {
+            const currentTimestamp = new Date().toISOString().slice(0, 7); // YYYY-MM format
+            if (!doctor.list_of_visits.some(visit => visit.timestamp === currentTimestamp)) {
+                doctor.list_of_visits.push({ timestamp: currentTimestamp });
+            }
+        }
+
+        await doctor.save();
+        res.status(200).json(doctor);
+    } catch (error) {
+        console.error('Error updating doctor availability:', error);
+        res.status(500).json({ message: 'Server error' });
     }
-    doctor.doctor_availability = req.body.doctor_availability;
-    await doctor.save();
-    res.json(doctor);
-}
-);
+});
 
 router.get('/get_doctors', async (req, res) => {
     try {
@@ -89,13 +106,18 @@ router.get('/get_doctors', async (req, res) => {
 });
 
 router.get('/get_doctor/:id', async (req, res) => {
-    const id = req.params.id;
-    const doctor = await Doctor.findById(id);
-    if (!doctor) {
-        res.status(404).send('Doctor not found');
+    const { id } = req.params;
+    try {
+        const doctor = await Doctor.findById(id);
+        if (doctor) {
+            res.status(200).json(doctor);
+        } else {
+            res.status(404).json({ message: 'Doctor not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching doctor details:', error);
+        res.status(500).json({ message: 'Server error' });
     }
-    console.log(doctor);
-    res.json(doctor);
 });
 
 router.put('/edit_doctor/:id', async (req, res) => {
