@@ -53,4 +53,60 @@ router.post('/add', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/queue/next/:doctor_id
+ * Finds the first (lowest queue_no) entry where the given doctor_id
+ * appears in doctor_list, and returns its book_no.
+ */
+router.get('/next/:doctor_id', async (req, res) => {
+  const docId = parseInt(req.params.doctor_id, 10);
+  if (isNaN(docId)) {
+    return res.status(400).json({ message: 'Invalid doctor_id' });
+  }
+
+  try {
+    // Query all queue entries containing this doctor, sorted by queue_no ascending
+    const entries = await Queue.find(
+      { 'doctor_list.doctor_id': docId },
+      { book_no: 1, queue_no: 1 }
+    )
+    .sort({ queue_no: 1 })
+    .limit(1)
+    .lean();
+
+    if (!entries || entries.length === 0) {
+      return res.status(404).json({ message: 'No queue entry found for this doctor' });
+    }
+
+    // Return the earliest book_no
+    return res.json({ book_no: entries[0].book_no });
+  } catch (err) {
+    console.error('Error fetching next queue entry:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * DELETE /api/queue/remove
+ * Removes a queue entry by book_no
+ * Expects: { book_no: Number }
+ */
+router.delete('/remove', async (req, res) => {
+  const { book_no } = req.body;
+  if (typeof book_no !== 'number') {
+    return res.status(400).json({ message: 'Invalid book_no' });
+  }
+
+  try {
+    const result = await Queue.deleteOne({ book_no });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Queue entry not found' });
+    }
+    return res.json({ message: 'Queue entry removed' });
+  } catch (err) {
+    console.error('Error removing queue entry:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

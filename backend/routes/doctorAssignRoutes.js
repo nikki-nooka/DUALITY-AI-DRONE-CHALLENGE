@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
 const PatientHistory = require('../models/patientHistoryModel');
+const Patient = require('../models/patientModel');
 const { logUserAction } = require('../utils/logger');
 
 // Fetch all doctors
@@ -37,33 +38,55 @@ router.post('/', async (req, res) => {
     const doc_id = doctor.doctor_id;
     const currentMonthYear = new Date().toISOString().slice(0, 7);
 
-    const patientHistory = await PatientHistory.findOne({ book_no });
+    let patientHistory = await PatientHistory.findOne({ book_no });
+
+    // If patient history does not exist, try to create it from Patient
     if (!patientHistory) {
-      return res.status(404).send({ message: 'Patient history not found' });
+      const patient = await Patient.findOne({ book_no });
+      if (!patient) {
+        return res.status(404).send({ message: 'Patient not found' });
+      }
+
+      patientHistory = new PatientHistory({
+        book_no,
+        visits: [
+          {
+            doctor_id: doc_id,
+            timestamp: currentMonthYear,
+            medicines_prescribed: [],
+            medicines_given: [],
+          },
+        ],
+      });
+
+      await patientHistory.save();
+
+      if (req._user && req._user.id) {
+        const logMessage = `Created new history and assigned doctor ${doc_name} (ID: ${doc_id}) to patient with book number ${book_no} for ${currentMonthYear}`;
+        await logUserAction(req._user.id, logMessage);
+      }
+
+      return res.status(200).send({ message: 'Patient history created and doctor assigned successfully' });
     }
 
-    const visitIndex = patientHistory.visits.findIndex(visit => visit.timestamp === currentMonthYear);
+    const visitIndex = patientHistory.visits.findIndex(
+      (visit) => visit.timestamp === currentMonthYear
+    );
+
     if (visitIndex === -1) {
       return res.status(404).send({ message: 'Visit not found for the current month and year' });
     }
 
-    // Store previous doctor ID for logging if one exists
     const previousDoctorId = patientHistory.visits[visitIndex].doctor_id;
-    
-    // Assign the doctor
+
     patientHistory.visits[visitIndex].doctor_id = doc_id;
     await patientHistory.save();
-    
-    // Log successful doctor assignment
+
     if (req._user && req._user.id) {
-      // Build an informative log message
       let logMessage = `Assigned doctor ${doc_name} (ID: ${doc_id}) to patient with book number ${book_no} for ${currentMonthYear}`;
-      
-      // If there was a previous doctor, include that in the log
       if (previousDoctorId) {
         logMessage += ` (replacing doctor ID: ${previousDoctorId})`;
       }
-      
       await logUserAction(req._user.id, logMessage);
     }
 
