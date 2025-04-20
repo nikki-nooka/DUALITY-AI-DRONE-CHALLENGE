@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
   const { book_no, doc_name } = req.body;
 
   try {
-    const doctor = await Doctor.findOne({ doctor_name: doc_name });
+    const doctor = await Doctor.findOne({ doctor_name: doc_name, doctor_availability: true });
     if (!doctor) {
       return res.status(404).send({ message: 'Doctor not found' });
     }

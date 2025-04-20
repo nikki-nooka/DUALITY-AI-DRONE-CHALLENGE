@@ -116,4 +116,28 @@ router.delete('/remove', async (req, res) => {
   }
 });
 
+// GET /api/queue/count/:doctorId
+// Returns the number of Queue documents where the given doctorId appears in doctor_list
+router.get('/count/:doctorId', async (req, res) => {
+  const doctorId = parseInt(req.params.doctorId, 10);
+  if (isNaN(doctorId)) {
+    return res.status(400).json({ message: 'Invalid doctor ID' });
+  }
+
+  try {
+    // Find all queues where doctor_list contains this doctorId, then count them
+    const matchingQueues = await Queue.find(
+      { 'doctor_list.doctor_id': doctorId },
+      '_id'
+    );
+    const count = matchingQueues.length;
+
+    return res.status(200).json({ doctor_id: doctorId, queueCount: count });
+  } catch (error) {
+    console.error('Error counting queues for doctor', doctorId, error);
+    return res.status(500).json({ message: 'Error counting queues' });
+  }
+});
+
+
 module.exports = router;
