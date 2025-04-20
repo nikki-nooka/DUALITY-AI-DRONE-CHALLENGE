@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
+const Patient = require('../models/patientModel');
 const Queue = require('../models/queueModel');
 
 // POST /api/queue/add
@@ -12,6 +13,12 @@ router.post('/add', async (req, res) => {
   }
 
   try {
+    // Only allow queue entry if patient exists
+    const patient = await Patient.findOne({ book_no });
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
     // Find all doctors matching the given names
     const doctors = await Doctor.find({ doctor_name: { $in: doctor_names } });
 
