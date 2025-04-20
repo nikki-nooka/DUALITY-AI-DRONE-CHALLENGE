@@ -228,4 +228,30 @@ router.put('/edit_doctor/:id', async (req, res) => {
     }
 });
 
+router.get('/doctor_analytics/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const doctor = await Doctor.findById(id);
+        if (!doctor) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+
+        // Extract the list of visits and count the number of visits
+        const visits = doctor.list_of_visits || [];
+        const visitCount = visits.length;
+
+        // Log the action
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Viewed analytics for doctor: ${doctor.doctor_name}`);
+        }
+
+        return res.status(200).json({ visits, visitCount });
+    } catch (error) {
+        console.error('Error fetching doctor analytics:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+);
+
 module.exports = router;

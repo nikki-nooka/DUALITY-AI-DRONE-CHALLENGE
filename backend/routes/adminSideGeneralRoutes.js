@@ -289,6 +289,8 @@ router.get('/get_volunteers', async (req, res) => {
 //     }
 // });
 
+// this is general analytics
+
 router.get('/analytics', async (req, res) => {
     try {
         const { monthYear } = req.query;
@@ -369,6 +371,106 @@ router.get('/analytics', async (req, res) => {
         }
         
         return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+router.get('/get_patient/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const patient = await Patient.findById(id);
+        if (patient) {
+            // Log the action
+            if (req._user && req._user.id) {
+                await logUserAction(req._user.id, `Viewed patient details: ${patient.patient_name}`);
+            }
+            
+            return res.status(200).json(patient);
+        } else {
+            return res.status(404).json({ message: 'Patient not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching patient details:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+);
+
+router.post('/delete_patient/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const patient = await Patient.findByIdAndDelete(id);
+        if (patient) {
+            // Log the action
+            if (req._user && req._user.id) {
+                await logUserAction(req._user.id, `Deleted patient: ${patient.patient_name}`);
+            }
+            
+            return res.status(200).json({ message: 'Patient deleted successfully' });
+        } else {
+            return res.status(404).json({ message: 'Patient not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting patient:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+);
+
+router.post('/edit_patient/:id', async (req, res) => {
+    const { id } = req.params;
+    const { patient_name, patient_age, patient_sex, patient_address, patient_phone_no } = req.body;
+
+    try {
+        const patient = await Patient.findById(id);
+        if (!patient) {
+            return res.status(404).json({ message: 'Patient not found' });
+        }
+
+        // Update patient details
+        if (patient_name) patient.patient_name = patient_name;
+        if (patient_age) patient.patient_age = patient_age;
+        if (patient_sex) patient.patient_sex = patient_sex;
+        if (patient_address) patient.patient_address = patient_address;
+        if (patient_phone_no) patient.patient_phone_no = patient_phone_no;
+
+        await patient.save();
+
+        // Log the action
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Edited patient details: ${patient.patient_name}`);
+        }
+
+        return res.status(200).json({ message: 'Patient details updated successfully', patient });
+    } catch (error) {
+        console.error('Error editing patient details:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/patient_analytics/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const patient = await Patient.findById(id);
+        if (!patient) {
+            return res.status(404).json({ message: 'Patient not found' });
+        }
+
+        // Get the patient history to count visits
+        const patientHistory = await PatientHistory.findOne({ book_no: patient.book_no });
+        
+        // Calculate the number of visits
+        const visitCount = patientHistory ? patientHistory.visits.length : 0;
+
+        // Log the action
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Viewed analytics for patient: ${patient.patient_name}`);
+        }
+
+        return res.status(200).json({ visitCount });
+    } catch (error) {
+        console.error('Error fetching patient analytics:', error);
+        return res.status(500).json({ message: 'Server error' });
     }
 });
 

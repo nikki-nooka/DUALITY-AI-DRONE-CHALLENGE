@@ -321,4 +321,38 @@ router.post('/edit_volunteer/:id', async (req, res) => {
     }
 });
 
+/**
+ * @route   GET /api/admin/volunteer_analytics/:id
+ * @desc    Get analytics for a specific volunteer
+ * @access  Admin
+ */
+router.get('/volunteer_analytics/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const volunteer = await User.findById(id);
+        if (!volunteer) {
+            return res.status(404).json({ message: 'Volunteer not found' });
+        }
+
+        if (volunteer.user_type !== 'volunteer') {
+            return res.status(400).json({ message: 'User is not a volunteer' });
+        }
+
+        // Extract the list of visits and count the number of visits
+        const visits = volunteer.list_of_visits || [];
+        const visitCount = visits.length;
+
+        // Log the action
+        if (req._user && req._user.id) {
+            await logUserAction(req._user.id, `Viewed analytics for volunteer: ${volunteer.user_name}`);
+        }
+
+        return res.status(200).json({ visits, visitCount });
+    } catch (error) {
+        console.error('Error fetching volunteer analytics:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;
