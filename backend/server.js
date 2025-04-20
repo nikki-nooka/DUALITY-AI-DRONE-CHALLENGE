@@ -26,6 +26,7 @@ const adminSideVolunteerRoutes = require('./routes/adminSideVolunteerRoutes');
 const authRoutes = require('./routes/authRoutes');
 const logRoutes = require('./routes/logRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const queueRoutes = require('./routes/queueRoutes');
 
 
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/admin', adminSideVolunteerRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/queue', queueRoutes);
 
 const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
