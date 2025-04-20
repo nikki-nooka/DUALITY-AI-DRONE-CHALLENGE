@@ -1,5 +1,6 @@
 const Log = require('../models/logModel');
 const mongoose = require('mongoose');
+const { formatInTimeZone } = require('date-fns-tz');
 
 /**
  * Logs user actions to the database
@@ -9,15 +10,9 @@ const mongoose = require('mongoose');
  */
 const logUserAction = async (user_id, action) => {
   try {
-    // Get current timestamp in YYYY-MM-DD HH:MM format
+    // Get current timestamp in YYYY-MM-DD HH:MM format in IST timezone
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    
-    const timestamp = `${year}-${month}-${day} ${hours}:${minutes}`;
+    const timestamp = formatInTimeZone(now, 'Asia/Kolkata', 'yyyy-MM-dd HH:mm');
     
     // Create and save the log entry
     const logEntry = new Log({
