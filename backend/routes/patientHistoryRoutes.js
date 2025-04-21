@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PatientHistory = require('../models/patientHistoryModel');
+const Patient = require('../models/patientModel');
 const Inventory = require('../models/inventoryModel');
 const { logUserAction } = require('../utils/logger');
 
@@ -12,7 +13,21 @@ router.post('/doctor-prescription', async (req, res) => {
       return res.status(400).json({ message: 'Invalid data provided' });
     }
 
+    // ← new: ensure the patient exists
+    const patient = await Patient.findOne({ book_no });
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found.' });
+    }
+
     const currentMonthYear = new Date().toISOString().slice(0, 7);
+
+    // ← new: ensure there's already a visit for this month in PatientHistory
+    const historyCheck = await PatientHistory.findOne({ book_no });
+    if (!historyCheck || !historyCheck.visits.some(v => v.timestamp === currentMonthYear)) {
+      return res.status(404).json({ message: 'Patient not registered.' });
+    }
+
+    // ——— the rest is exactly as before ———
     let patientHistory = await PatientHistory.findOne({ book_no });
     let isNewPatient = false;
     let isNewVisit = false;
@@ -46,14 +61,12 @@ router.post('/doctor-prescription', async (req, res) => {
     
     // Log the prescription action
     if (req._user && req._user.id) {
-      // Create a summary of prescribed medicines
       const medicinesSummary = prescriptions.map(med => 
         `${med.medicine_id} (Qty: ${med.quantity})`
       ).join(', ');
       
       let actionDescription = `Added prescription for patient (Book #${book_no}) - Medicines: ${medicinesSummary}`;
       
-      // Add context about whether this is a new patient or visit
       if (isNewPatient) {
         actionDescription += ' - Created new patient history record';
       } else if (isNewVisit) {
