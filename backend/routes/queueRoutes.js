@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
 const Patient = require('../models/patientModel');
+const PatientHistory = require('../models/patientHistoryModel');
 const Queue = require('../models/queueModel');
 
 // POST /api/queue/add
@@ -13,10 +14,24 @@ router.post('/add', async (req, res) => {
   }
 
   try {
+    let patientHistory = await PatientHistory.findOne({ book_no });
+
+    // If patient history does not exist, show error.
+    if (!patientHistory) {
+        return res.status(404).send({ message: 'Patient not found' });
+    }
     // Only allow queue entry if patient exists
-    const patient = await Patient.findOne({ book_no });
-    if (!patient) {
-      return res.status(404).json({ message: 'Patient not found' });
+    // const patient = await Patient.findOne({ book_no });
+    // if (!patient) {
+    //   return res.status(404).json({ message: 'Patient not found' });
+    // }
+    const currentMonthYear = new Date().toISOString().slice(0, 7);
+    const visitIndex = patientHistory.visits.findIndex(
+      (visit) => visit.timestamp === currentMonthYear
+    );
+
+    if (visitIndex === -1) {
+      return res.status(404).send({ message: 'Visit not found for the current month and year' });
     }
 
     // Find all doctors matching the given names

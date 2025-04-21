@@ -40,33 +40,33 @@ router.post('/', async (req, res) => {
 
     let patientHistory = await PatientHistory.findOne({ book_no });
 
-    // If patient history does not exist, try to create it from Patient
+    // If patient history does not exist, show error.
     if (!patientHistory) {
-      const patient = await Patient.findOne({ book_no });
-      if (!patient) {
+      // const patient = await Patient.findOne({ book_no });
+      // if (!patient) {
         return res.status(404).send({ message: 'Patient not found' });
-      }
+      // }
 
-      patientHistory = new PatientHistory({
-        book_no,
-        visits: [
-          {
-            doctor_id: doc_id,
-            timestamp: currentMonthYear,
-            medicines_prescribed: [],
-            medicines_given: [],
-          },
-        ],
-      });
+      // patientHistory = new PatientHistory({
+      //   book_no,
+      //   visits: [
+      //     {
+      //       doctor_id: doc_id,
+      //       timestamp: currentMonthYear,
+      //       medicines_prescribed: [],
+      //       medicines_given: [],
+      //     },
+      //   ],
+      // });
 
-      await patientHistory.save();
+      // await patientHistory.save();
 
-      if (req._user && req._user.id) {
-        const logMessage = `Created new history and assigned doctor ${doc_name} (ID: ${doc_id}) to patient with book number ${book_no} for ${currentMonthYear}`;
-        await logUserAction(req._user.id, logMessage);
-      }
+      // if (req._user && req._user.id) {
+      //   const logMessage = `Created new history and assigned doctor ${doc_name} (ID: ${doc_id}) to patient with book number ${book_no} for ${currentMonthYear}`;
+      //   await logUserAction(req._user.id, logMessage);
+      // }
 
-      return res.status(200).send({ message: 'Patient history created and doctor assigned successfully' });
+      // return res.status(200).send({ message: 'Patient history created and doctor assigned successfully' });
     }
 
     const visitIndex = patientHistory.visits.findIndex(
