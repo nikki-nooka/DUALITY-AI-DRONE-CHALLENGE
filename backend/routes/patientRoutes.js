@@ -7,6 +7,12 @@ const { logUserAction } = require('../utils/logger');
 // GET route to fetch patient data by book number
 router.get('/:book_no', async (req, res) => {
   const { book_no } = req.params;
+
+  // Validate book_no
+  if (isNaN(book_no) || book_no <= 0) {
+    return res.status(400).send({ message: 'Invalid book number' });
+  }
+  
   try {
     const patient = await Patient.findOne({ book_no });
     if (patient) {
