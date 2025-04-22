@@ -24,6 +24,11 @@ router.post('/add_volunteer', async (req, res) => {
                 message: 'All fields are required: username, password, phone number, email, and age' 
             });
         }
+
+        // Validate email format
+        if (!/\S+@\S+\.\S+/.test(user_email)) {
+            return res.status(400).json({ message: 'Email format is invalid' });
+        }
         
         // Check if username or email already exists
         const existingUser = await User.findOne({ 

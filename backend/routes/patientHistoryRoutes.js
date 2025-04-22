@@ -9,11 +9,11 @@ router.post('/doctor-prescription', async (req, res) => {
   try {
     const { book_no, prescriptions } = req.body;
 
-    if (!book_no || !prescriptions || !Array.isArray(prescriptions)) {
+        if (!book_no || !prescriptions || !Array.isArray(prescriptions)) {
       return res.status(400).json({ message: 'Invalid data provided' });
     }
 
-    // ← new: ensure the patient exists
+    // Check if the patient exists
     const patient = await Patient.findOne({ book_no });
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found.' });
@@ -21,63 +21,40 @@ router.post('/doctor-prescription', async (req, res) => {
 
     const currentMonthYear = new Date().toISOString().slice(0, 7);
 
-    // ← new: ensure there's already a visit for this month in PatientHistory
-    const historyCheck = await PatientHistory.findOne({ book_no });
-    if (!historyCheck || !historyCheck.visits.some(v => v.timestamp === currentMonthYear)) {
+    // Check if patient history exists for the current timestamp
+    const patientHistory = await PatientHistory.findOne({ book_no });
+    if (!patientHistory) {
       return res.status(404).json({ message: 'Patient not registered.' });
     }
 
-    // ——— the rest is exactly as before ———
-    let patientHistory = await PatientHistory.findOne({ book_no });
-    let isNewPatient = false;
-    let isNewVisit = false;
-
-    if (!patientHistory) {
-      isNewPatient = true;
-      patientHistory = new PatientHistory({
-        book_no,
-        visits: [{
-          timestamp: currentMonthYear,
-          medicines_prescribed: prescriptions,
-          medicines_given: []
-        }]
-      });
-    } else {
-      let visit = patientHistory.visits.find(visit => visit.timestamp === currentMonthYear);
-      
-      if (!visit) {
-        isNewVisit = true;
-        patientHistory.visits.push({
-          timestamp: currentMonthYear,
-          medicines_prescribed: prescriptions,
-          medicines_given: []
-        });
-      } else {
-        visit.medicines_prescribed.push(...prescriptions);
-      }
+    // Check if a visit exists for the current timestamp
+    const visit = patientHistory.visits.find(v => v.timestamp === currentMonthYear);
+    if (!visit) {
+      return res.status(404).json({ message: 'Patient not registered for the current month.' });
     }
+
+    // Check if doctor_id is assigned for the current timestamp
+    if (!visit.doctor_id) {
+      return res.status(400).json({ message: 'Doctor not assigned.' });
+    }
+
+    // Add prescriptions to the visit
+    visit.medicines_prescribed.push(...prescriptions);
 
     await patientHistory.save();
-    
+
     // Log the prescription action
     if (req._user && req._user.id) {
-      const medicinesSummary = prescriptions.map(med => 
+      const medicinesSummary = prescriptions.map(med =>
         `${med.medicine_id} (Qty: ${med.quantity})`
       ).join(', ');
-      
-      let actionDescription = `Added prescription for patient (Book #${book_no}) - Medicines: ${medicinesSummary}`;
-      
-      if (isNewPatient) {
-        actionDescription += ' - Created new patient history record';
-      } else if (isNewVisit) {
-        actionDescription += ' - Created new visit for existing patient';
-      } else {
-        actionDescription += ' - Updated existing prescription';
-      }
-      
-      await logUserAction(req._user.id, actionDescription);
+
+      await logUserAction(
+        req._user.id,
+        `Added prescription for patient (Book #${book_no}) - Medicines: ${medicinesSummary}`
+      );
     }
-    
+
     return res.status(200).json({ message: 'Prescription added successfully!' });
   } catch (error) {
     console.error('Error in doctor prescription route:', error);
