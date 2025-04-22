@@ -105,45 +105,52 @@ const addMedicine = async (req, res) => {
 
         // Check if the formulation already exists
         const existingMedicine = await Medicine.findOne({ medicine_formulation });
-
         if (existingMedicine) {
-            // Check if the same name and expiry date exist in the formulation
-            const existingBatch = existingMedicine.medicine_details.find(
-                (detail) =>
-                    detail.medicine_name === medicine_name &&
-                    new Date(detail.expiry_date).toISOString().split('T')[0] ===
-                        new Date(expiry_date).toISOString().split('T')[0]
-            );
+            return res.status(400).json({ message: 'Formulation already exists.' });
+        }
 
-            if (existingBatch) {
-                return res.status(400).json({ message: 'Same batch exists.' });
-            }
+        // // Check if the formulation already exists
+        // const existingMedicine = await Medicine.findOne({ medicine_formulation });
 
-            // Add a new batch to the existing formulation
-            existingMedicine.medicine_details.push({
-                medicine_name,
-                expiry_date,
-                quantity
-            });
+        // if (existingMedicine) {
+        //     // Check if the same name and expiry date exist in the formulation
+        //     const existingBatch = existingMedicine.medicine_details.find(
+        //         (detail) =>
+        //             detail.medicine_name === medicine_name &&
+        //             new Date(detail.expiry_date).toISOString().split('T')[0] ===
+        //                 new Date(expiry_date).toISOString().split('T')[0]
+        //     );
 
-            // Update the total quantity
-            existingMedicine.total_quantity += quantity;
+        //     if (existingBatch) {
+        //         return res.status(400).json({ message: 'Same batch exists.' });
+        //     }
 
-            await existingMedicine.save();
+        //     // Add a new batch to the existing formulation
+        //     existingMedicine.medicine_details.push({
+        //         medicine_name,
+        //         expiry_date,
+        //         quantity
+        //     });
 
-            // Log the successful addition
-            if (req._user && req._user.id) {
-                await logUserAction(
-                    req._user.id,
-                    `Added new batch to Medicine ${medicine_formulation} - Name: ${medicine_name}, Expiry: ${expiry_date}, Quantity: ${quantity}`
-                );
-            }
+        //     // Update the total quantity
+        //     existingMedicine.total_quantity += quantity;
 
-            return res.status(201).json({
-                message: 'New batch added to existing formulation',
-                medicine: existingMedicine
-            });
-        } else {
+        //     await existingMedicine.save();
+
+        //     // Log the successful addition
+        //     if (req._user && req._user.id) {
+        //         await logUserAction(
+        //             req._user.id,
+        //             `Added new batch to Medicine ${medicine_formulation} - Name: ${medicine_name}, Expiry: ${expiry_date}, Quantity: ${quantity}`
+        //         );
+        //     }
+
+        //     return res.status(201).json({
+        //         message: 'New batch added to existing formulation',
+        //         medicine: existingMedicine
+        //     });
+        // }
+        else {
             // If formulation does not exist, create a new medicine entry
             let medicine_id = 1;
             const medicines = await Medicine.find();
