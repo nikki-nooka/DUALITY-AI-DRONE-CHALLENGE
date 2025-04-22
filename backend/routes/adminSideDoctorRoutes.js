@@ -12,7 +12,7 @@ const { logUserAction } = require('../utils/logger');
 
 router.post('/add_doctor', async (req, res) => {
     const { doctor_name, doctor_email, doctor_phone_no, doctor_age, specialization, doctor_sex } = req.body;
-
+    
     try {
         // Check if the doctor already exists using phone number
         const existingDoctor = await Doctor.findOne({ doctor_phone_no });

@@ -40,6 +40,14 @@ router.post('/', async (req, res) => {
   try {
     const existingPatient = await Patient.findOne({ book_no });
 
+    // Check for mismatched patient type selection
+    if (existingPatient && oldNew === 'new') {
+      return res.status(400).json({ message: 'Patient already exists.' });
+    }
+    if (!existingPatient && oldNew === 'old') {
+      return res.status(400).json({ message: 'Patient does not exist.' });
+    }
+
     if (existingPatient) {
       // Track original values for logging changes
       const originalValues = {

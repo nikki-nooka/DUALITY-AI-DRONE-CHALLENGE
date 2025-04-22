@@ -27,6 +27,16 @@ router.post('/', async (req, res) => {
       return res.status(404).send({ message: 'Patient history not found for the current month and year' });
     }
 
+    // Check if all fields are empty
+    if (!rbs && !bp && !height && !weight && !pulse && !extra_note) {
+      return res.status(400).send({ message: 'At least one field must be provided' });
+    }
+
+    // Check if BP is in the correct format (integer/integer)
+    if (bp && !/^\d+\/\d+$/.test(bp)) {
+      return res.status(400).send({ message: 'BP must be in the format systolic/diastolic (e.g., 120/80)' });
+    }
+
     // Check if vitals already exist for the current month and year
     let existingVitals = await Vitals.findOne({ book_no, timestamp: currentMonthYear });
 
