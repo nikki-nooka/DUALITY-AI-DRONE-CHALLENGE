@@ -223,7 +223,7 @@ import re
 CONNECTION_STRING = "mongodb+srv://s25dassteam24:EcI2NdEIA0a95sd2@team-24.km4p9.mongodb.net/?retryWrites=true&w=majority&appName=team-24"  # Replace with your connection string
 DB_NAME = "test"
 COLLECTION_NAME = "inventories"
-CATEGORY_COLLECTION = "medicine_categories"
+CATEGORY_COLLECTION = "medicinecategories"
 
 def parse_expiry_date(date_str):
     """Convert expiry date string to YYYY-MM format string"""
