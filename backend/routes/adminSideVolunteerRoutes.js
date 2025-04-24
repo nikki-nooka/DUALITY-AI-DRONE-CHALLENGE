@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/userModel');
 const { logUserAction } = require('../utils/logger');
+const bcrypt = require('bcryptjs'); // Make sure to install: npm install bcryptjs
 
 /**
  * @route   POST /api/admin/add_volunteer
@@ -49,14 +50,18 @@ router.post('/add_volunteer', async (req, res) => {
         const highestUser = await User.findOne().sort('-user_id');
         const nextUserId = highestUser ? highestUser.user_id + 1 : 1;
         
-        // Create new volunteer user
+        // Hash the password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(user_password, salt);
+        
+        // Create new volunteer user with hashed password
         const newVolunteer = new User({
             user_id: nextUserId,
             user_name,
             user_phone_no,
             user_email,
             user_age,
-            user_password,
+            user_password: hashedPassword, // Store hashed password
             user_type: 'volunteer',
             list_of_visits: [] // Initialize with empty visits array
         });
@@ -277,7 +282,12 @@ router.post('/edit_volunteer/:id', async (req, res) => {
         if (user_phone_no) volunteer.user_phone_no = user_phone_no;
         if (user_email) volunteer.user_email = user_email;
         if (user_age) volunteer.user_age = user_age;
-        if (user_password) volunteer.user_password = user_password;
+        
+        // Hash password if provided
+        if (user_password) {
+            const salt = await bcrypt.genSalt(10);
+            volunteer.user_password = await bcrypt.hash(user_password, salt);
+        }
         
         // Save updated volunteer
         await volunteer.save();
