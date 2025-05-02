@@ -1,93 +1,261 @@
 # Dass Team 24 Improving Healthcare System
 
+**A comprehensive web-based application to streamline and digitize healthcare camp management for SWECHA.**
 
+---
 
-## Getting started
+## Table of Contents
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Tech Stack](#tech-stack)
+4. [Architecture & Folder Structure](#architecture--folder-structure)
+5. [Installation & Setup](#installation--setup)
+6. [Usage](#usage)
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+   * [Running the Application](#running-the-application)
+   * [API Endpoints](#api-endpoints)
+7. [Testing](#testing)
+8. [Contributing](#contributing)
+9. [License](#license)
+10. [Authors & Acknowledgments](#authors--acknowledgments)
 
-## Add your files
+---
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Overview
 
+This project provides a digital platform for managing SWECHA’s monthly medical camps, enabling volunteers and administrators to register patients, record vitals, assign doctors, manage prescriptions, dispense medicines, and track inventory in real time. The system ensures efficient workflows, accurate record-keeping, and transparent logging.
+
+---
+
+## Features
+
+* **Authentication & Authorization**: Secure JWT-based login with role-based access control for Admins and Volunteers.
+* **Patient Management**: CRUD operations for patient records, unique Book ID generation, and comprehensive patient history tracking (visits, assigned doctors, prescriptions, vitals).
+* **Vitals Recording**: Input and validation of vital signs including blood pressure, blood sugar, height, weight, and pulse.
+* **Doctor Management**: CRUD operations for doctor profiles with availability and specialization, plus assignment of patients based on a first-come-first-served queue.
+* **Prescription Handling**: Doctors can prescribe treatment plans which are stored in patient history.
+* **Medicine Inventory**: Management of medicine batches with stock updates, duplicate batch prevention, expiry filtering, and real-time stock adjustment upon dispensing.
+* **Medicine Dispensing**: Verification of Book IDs at distribution, linkage of dispensed medicines to patient records, and automatic inventory decrement.
+* **Activity Logging**: Audit trail of all user actions such as record updates, vitals entries, and inventory changes.
+* **Volunteer & Admin Dashboards**: Role-specific interfaces for streamlined navigation and operation.
+* **Analytics & Reports**: Basic camp metrics including patient demographics, attendance, and medicines usage.
+* **Concurrency Control**: Handling simultaneous inventory updates to prevent data conflicts.
+
+---
+
+## Tech Stack
+
+| Layer          | Technology                                  |
+| -------------- | ------------------------------------------- |
+| Frontend       | React.js, React Router, Axios, Recharts     |
+| Backend        | Node.js, Express.js, Mongoose (MongoDB ODM) |
+| Database       | MongoDB                                     |
+| Authentication | JWT, Bcrypt                                 |
+| Dev Tools      | GitLab, Postman, VS Code                    |
+| Optional       | Docker                                      |
+
+---
+
+## Architecture & Folder Structure
+
+```plaintext
+root/
+├── backend/
+│   ├── controllers/      # Business logic handlers
+│   ├── middlewares/      # Authentication & validation
+│   ├── models/           # Mongoose schemas (patientModel.js, doctorModel.js, inventoryModel.js, vitalModel.js, logModel.js)
+│   ├── routes/           # Express routes (authRoutes.js, patientRoutes.js, doctorRoutes.js, medicineRoutes.js, vitalRoutes.js, logRoutes.js)
+│   ├── server.js         # Entry point
+│   └── .env              # Environment variables (PORT, MONGO_URI, JWT_SECRET)
+
+├── frontend/
+│   ├── public/           # Static assets
+│   ├── src/
+│   │   ├── api/          # Axios instance and API helper functions
+│   │   ├── Components/   # Reusable UI components (Navbar, Footer, forms)
+│   │   ├── Pages/        # Page components (Dashboard, PatientProfile, UpdateMedicineStock)
+│   │   └── Styles/       # CSS/SASS files
+│   ├── .env              # REACT_APP_BACKEND URL
+│   └── package.json      # Frontend dependencies and scripts
+
+├── SRS.pdf               # Software Requirements Specification (use cases and requirements)
+├── LICENSE               # MIT License
+└── README.md             # Project documentation
 ```
-cd existing_repo
-git remote add origin https://code.swecha.org/ananth_y/dass-team-24-improving-healthcare-system.git
-git branch -M main
-git push -uf origin main
-```
 
-## Integrate with your tools
+---
 
-- [ ] [Set up project integrations](https://code.swecha.org/ananth_y/dass-team-24-improving-healthcare-system/-/settings/integrations)
+## Installation & Setup
 
-## Collaborate with your team
+### Prerequisites
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+* Node.js v16 or higher
+* MongoDB (local or cloud instance)
+* npm or yarn
 
-## Test and Deploy
+### Steps
 
-Use the built-in continuous integration in GitLab.
+1. **Clone the repository**
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+   ```bash
+   git clone https://code.swecha.org/ananth_y/dass-team-24-improving-healthcare-system.git
+   cd dass-team-24-improving-healthcare-system
+   ```
 
-***
+2. **Backend Setup**
 
-# Editing this README
+   ```bash
+   cd backend
+   npm install
+   cp .env.example .env
+   # Edit .env with your MONGO_URI and JWT_SECRET
+   npm start
+   ```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+3. **Frontend Setup**
 
-## Suggestions for a good README
+   ```bash
+   cd frontend
+   npm install
+   cp .env.example .env
+   # Set REACT_APP_BACKEND=http://localhost:5002
+   npm start
+   ```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+4. **Access the Application**
 
-## Name
-Choose a self-explaining name for your project.
+   * Frontend: [http://localhost:3000](http://localhost:3000)
+   * Backend API: [http://localhost:5002/api](http://localhost:5002/api)
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+---
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Running the Application
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+* Ensure both backend and frontend servers are running.
+* Log in as an Admin (seeded or via API) to manage doctors, volunteers, and patients.
+* Volunteers can record patient vitals and assist in dispensing medicines.
+
+### API Endpoints
+
+#### Authentication
+
+* **POST** `/api/auth/login` – Login for users (Admin & Volunteer)
+
+#### Patients
+
+* **GET** `/api/admin/get_patient/:id` – Fetch patient details by ID
+* **GET** `/api/admin/get_patients` – Fetch all patients
+* **POST** `/api/admin/add_patient` – Add a new patient
+* **POST** `/api/admin/edit_patient/:id` – Edit patient details
+* **POST** `/api/admin/delete_patient/:id` – Delete a patient
+* **GET** `/api/admin/patient_analytics/:id` – Get analytics for a specific patient
+
+#### Doctors
+
+* **POST** `/api/admin/add_doctor` – Add a new doctor
+* **GET** `/api/admin/get_doctors` – Fetch all doctors
+* **GET** `/api/admin/doctor_analytics/:id` – Get analytics for a specific doctor
+* **PUT** `/api/admin/edit_doctor/:id` – Edit doctor details
+* **DELETE** `/api/admin/delete_doctor/:id` – Delete a doctor
+* **PUT** `/api/admin/update_doctor_availability/:id` – Update doctor availability
+
+#### Volunteers
+
+* **POST** `/api/admin/add_volunteer` – Add a new volunteer
+* **GET** `/api/admin/get_volunteers` – Fetch all volunteers
+* **GET** `/api/admin/get_volunteer/:id` – Fetch details of a specific volunteer
+* **POST** `/api/admin/edit_volunteer/:id` – Edit volunteer details
+* **POST** `/api/admin/delete_volunteer/:id` – Delete a specific volunteer
+* **POST** `/api/admin/delete_volunteers` – Delete multiple volunteers
+* **GET** `/api/admin/volunteer_analytics/:id` – Get analytics for a specific volunteer
+
+#### Vitals
+
+* **POST** `/api/vitals` – Record or update vitals for a patient
+
+#### Medicines
+
+* **POST** `/api/admin/add_new_medicine` – Add a new medicine formulation
+* **POST** `/api/admin/add_new_medicine_details` – Add a new batch to an existing medicine
+* **GET** `/api/admin/get_medicines` – Fetch all medicines
+* **GET** `/api/admin/get_medicine/:id` – Fetch details of a specific medicine
+* **POST** `/api/admin/update_medicine_stock` – Update stock for a specific batch
+* **POST** `/api/admin/update_medicine_expiry_date` – Update expiry date for a specific batch
+* **POST** `/api/admin/delete_medicine_batch` – Delete a specific batch of a medicine
+* **POST** `/api/admin/delete_medicine` – Delete a medicine formulation
+
+#### Patient History
+
+* **GET** `/api/patient-history/medicine-pickup/:book_no` – Fetch unpicked medicines for a patient
+* **POST** `/api/patient-history/medicine-pickup` – Confirm medicine pickup and update inventory
+* **POST** `/api/patient-history/doctor-prescription` – Add prescriptions for a patient
+* **GET** `/api/patient-history/medicine-verification/:book_no` – Verify medicines for a patient
+
+#### Doctor Assignment
+
+* **POST** `/api/doctor-assign` – Assign a doctor to a patient
+* **GET** `/api/doctor-assign/get_doctors` – Fetch available doctors for assignment
+
+#### Inventory
+
+* **GET** `/api/inventory/:medicineId` – Fetch inventory details for a specific medicine
+
+#### Logs
+
+* **POST** `/api/logs` – Create a new log entry
+* **GET** `/api/admin/logs` – View activity logs
+
+#### Analytics
+
+* **GET** `/api/admin/analytics` – Fetch overall analytics data
+
+#### Queue
+
+* **POST** `/api/queue/add` – Add a patient to the queue
+
+
+---
+
+## Testing
+
+Currently, no automated tests are configured. Future enhancements could include:
+
+* **Unit Tests**: Using Jest and Supertest for backend route testing.
+* **End-to-End Tests**: Using Cypress for full application flows.
+
+---
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+We welcome contributions:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/YourFeature`
+3. Commit: `git commit -m 'Add YourFeature'`
+4. Push: `git push origin feature/YourFeature`
+5. Open a Pull Request
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Please adhere to existing code style and include descriptive commit messages.
+
+---
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+By contributing to this project, you agree that your contributions will be licensed under the same license as the project.
+
+---
+
+## Authors & Acknowledgments
+
+**Team 24 (SWECHA Camp)**
+
+* Sai Veekshith Kotha (2023101078)
+* Ananth Yegavakota (2023101079)
+* Larissa Lavanya (2023101105)
+* Priyanshi Gupta (2023101068)
+* Nikhil Sivakumar (2023114018)
+
+Special thanks to all contributors and testers for their valuable feedback.
