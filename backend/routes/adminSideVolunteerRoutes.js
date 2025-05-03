@@ -50,18 +50,14 @@ router.post('/add_volunteer', async (req, res) => {
         const highestUser = await User.findOne().sort('-user_id');
         const nextUserId = highestUser ? highestUser.user_id + 1 : 1;
         
-        // Hash the password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(user_password, salt);
-        
-        // Create new volunteer user with hashed password
+        // Create new volunteer user with plain password
         const newVolunteer = new User({
             user_id: nextUserId,
             user_name,
             user_phone_no,
             user_email,
             user_age,
-            user_password: hashedPassword, // Store hashed password
+            user_password, // Store password directly without hashing
             user_type: 'volunteer',
             list_of_visits: [] // Initialize with empty visits array
         });
@@ -123,8 +119,7 @@ router.get('/get_volunteers', async (req, res) => {
  */
 router.get('/get_volunteer/:id', async (req, res) => {
     try {
-        const volunteer = await User.findById(req.params.id)
-            .select('-user_password');
+        const volunteer = await User.findById(req.params.id); // Remove select('-user_password')
         
         if (!volunteer) {
             return res.status(404).json({ message: 'Volunteer not found' });
@@ -283,10 +278,9 @@ router.post('/edit_volunteer/:id', async (req, res) => {
         if (user_email) volunteer.user_email = user_email;
         if (user_age) volunteer.user_age = user_age;
         
-        // Hash password if provided
+        // Update password directly without hashing
         if (user_password) {
-            const salt = await bcrypt.genSalt(10);
-            volunteer.user_password = await bcrypt.hash(user_password, salt);
+            volunteer.user_password = user_password;
         }
         
         // Save updated volunteer

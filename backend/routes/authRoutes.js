@@ -21,8 +21,8 @@ router.post('/login', async (req, res) => {
         
         // Different password verification based on user type
         if (user.user_type === 'volunteer') {
-            // For volunteers, use bcrypt to verify hashed password
-            isValidPassword = await bcrypt.compare(user_password, user.user_password);
+            // Direct password comparison for volunteers
+            isValidPassword = user_password === user.user_password;
         } else {
             // For admins, use direct comparison (no hashing)
             isValidPassword = user_password === user.user_password;
