@@ -90,6 +90,7 @@ router.post('/add_new_medicine_details', async (req, res) => {
 const addMedicine = async (req, res) => {
     try {
         const {
+            medicine_id,
             medicine_formulation,
             medicine_name,
             expiry_date,
@@ -99,8 +100,14 @@ const addMedicine = async (req, res) => {
         console.log(req.body);
 
         // Validate required fields
-        if (!medicine_formulation || !medicine_name || !expiry_date || !quantity) {
+        if (!medicine_id || !medicine_formulation || !medicine_name || !expiry_date || !quantity) {
             return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Check if medicine with the same ID already exists
+        const existingMedicineById = await Medicine.findOne({ medicine_id });
+        if (existingMedicineById) {
+            return res.status(400).json({ message: 'Medicine with this ID already exists.' });
         }
 
         // Check if the formulation already exists
@@ -109,81 +116,32 @@ const addMedicine = async (req, res) => {
             return res.status(400).json({ message: 'Formulation already exists.' });
         }
 
-        // // Check if the formulation already exists
-        // const existingMedicine = await Medicine.findOne({ medicine_formulation });
+        // Create new medicine with user-provided ID
+        const newMedicine = new Medicine({
+            medicine_id,
+            medicine_formulation,
+            total_quantity: quantity,
+            medicine_details: [{
+                medicine_name,
+                expiry_date,
+                quantity
+            }]
+        });
 
-        // if (existingMedicine) {
-        //     // Check if the same name and expiry date exist in the formulation
-        //     const existingBatch = existingMedicine.medicine_details.find(
-        //         (detail) =>
-        //             detail.medicine_name === medicine_name &&
-        //             new Date(detail.expiry_date).toISOString().split('T')[0] ===
-        //                 new Date(expiry_date).toISOString().split('T')[0]
-        //     );
+        await newMedicine.save();
 
-        //     if (existingBatch) {
-        //         return res.status(400).json({ message: 'Same batch exists.' });
-        //     }
-
-        //     // Add a new batch to the existing formulation
-        //     existingMedicine.medicine_details.push({
-        //         medicine_name,
-        //         expiry_date,
-        //         quantity
-        //     });
-
-        //     // Update the total quantity
-        //     existingMedicine.total_quantity += quantity;
-
-        //     await existingMedicine.save();
-
-        //     // Log the successful addition
-        //     if (req._user && req._user.id) {
-        //         await logUserAction(
-        //             req._user.id,
-        //             `Added new batch to Medicine ${medicine_formulation} - Name: ${medicine_name}, Expiry: ${expiry_date}, Quantity: ${quantity}`
-        //         );
-        //     }
-
-        //     return res.status(201).json({
-        //         message: 'New batch added to existing formulation',
-        //         medicine: existingMedicine
-        //     });
-        // }
-        else {
-            // If formulation does not exist, create a new medicine entry
-            let medicine_id = 1;
-            const medicines = await Medicine.find();
-            while (medicines.find((medicine) => medicine.medicine_id === medicine_id.toString())) {
-                medicine_id++;
-            }
-
-            const newMedicine = new Medicine({
-                medicine_id: medicine_id.toString(),
-                medicine_formulation,
-                total_quantity: quantity,
-                medicine_details: [{
-                    medicine_name,
-                    expiry_date,
-                    quantity
-                }]
-            });
-
-            await newMedicine.save();
-
-            // Log the successful addition
-            if (req._user && req._user.id) {
-                await logUserAction(
-                    req._user.id,
-                    `Added new medicine: ${medicine_formulation} (ID: ${medicine_id}) - Name: ${medicine_name}, Expiry: ${expiry_date}, Quantity: ${quantity}`
-                );
-            }
-
-            return res.status(201).json({
-                message: 'New medicine added to inventory',
-                medicine: newMedicine
-            });
+        // Log the successful addition
+        if (req._user && req._user.id) {
+            await logUserAction(
+                req._user.id,
+                `Added new medicine: ${medicine_formulation} (ID: ${medicine_id}) - Name: ${medicine_name}, Expiry: ${expiry_date}, Quantity: ${quantity}`
+            );
         }
+
+        return res.status(201).json({
+            message: 'New medicine added to inventory',
+            medicine: newMedicine
+        });
     } catch (error) {
         console.error('Error adding medicine:', error);
         return res.status(500).json({ message: 'Server error', error: error.message });
