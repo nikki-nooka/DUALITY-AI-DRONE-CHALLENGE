@@ -22,7 +22,7 @@ services:
     depends_on:
       - mongo
     ports:
-      - "80:5002"
+      - "5002:5002"
 
   frontend:
     build: ./frontend
