@@ -31,8 +31,10 @@ const queueRoutes = require('./routes/queueRoutes');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
-app.use(authMiddleware); // Apply logging middleware to all routes, to log all actions
+app.use(cors({
+  origin: 'https://lwgk40o4wkwssg880wgg0s8w.apps.swecha.org', // or your frontend domain
+  credentials: true
+}));app.use(authMiddleware); // Apply logging middleware to all routes, to log all actions
 
 connectDB();
 
