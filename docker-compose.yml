@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  backend:
+    build: ./backend
+    restart: always
+    environment:
+      MONGO_URI: mongodb://root:example@mongo:27017/
+      PORT: 5002
+      JWT_SECRET: your_jwt_secret
+    depends_on:
+      - mongo
+    ports:
+      - "5002:5002"
+
+  frontend:
+    build: ./frontend
+    restart: always
+    environment:
+      - REACT_APP_BACKEND=http://backend:5002
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  mongo-data:
