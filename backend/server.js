@@ -34,7 +34,9 @@ app.use(express.json());
 app.use(cors({
   origin: 'https://medical-camp.apps.swecha.org', // or your frontend domain
   credentials: true
-}));app.use(authMiddleware); // Apply logging middleware to all routes, to log all actions
+}));
+
+app.use(authMiddleware); // Apply logging middleware to all routes, to log all actions
 
 connectDB();
 
