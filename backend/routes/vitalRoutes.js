@@ -142,5 +142,20 @@ router.post('/', async (req, res) => {
     return res.status(400).send({ message: error.message });
   }
 });
+router.get('/:book_no', async (req, res) => {
+  const { book_no } = req.params;
+  const currentMonthYear = new Date().toISOString().slice(0, 7);
+
+  try {
+    const vitals = await Vitals.findOne({ book_no, timestamp: currentMonthYear });
+    if (!vitals) {
+      return res.status(404).send({ message: 'No vitals found for this patient for the current month and year' });
+    }
+    return res.status(200).send(vitals);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(400).send({ message: error.message });
+  }
+});
 
 module.exports = router;
