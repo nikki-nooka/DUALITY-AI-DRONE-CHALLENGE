@@ -149,7 +149,7 @@ router.get('/:book_no', async (req, res) => {
   try {
     const vitals = await Vitals.findOne({ book_no, timestamp: currentMonthYear });
     if (!vitals) {
-      return res.status(404).send({ message: 'No vitals found for this patient for the current month and year' });
+      return res.status(404).send({ message: 'No data found for this patient for the current month and year' });
     }
     return res.status(200).send(vitals);
   } catch (error) {

@@ -4,6 +4,7 @@ const Doctor = require('../models/doctorModel');
 const PatientHistory = require('../models/patientHistoryModel');
 const Patient = require('../models/patientModel');
 const { logUserAction } = require('../utils/logger');
+const Vitals = require('../models/vitalsModel');
 
 // Fetch all doctors
 router.get('/get_doctors', async (req, res) => {
@@ -69,12 +70,30 @@ router.post('/', async (req, res) => {
       // return res.status(200).send({ message: 'Patient history created and doctor assigned successfully' });
     }
 
+    const patient = await Patient.findOne({ book_no });
+    if (!patient) {
+      return res.status(404).send({ message: 'Patient not found' });  
+    }
+
     const visitIndex = patientHistory.visits.findIndex(
       (visit) => visit.timestamp === currentMonthYear
     );
 
     if (visitIndex === -1) {
       return res.status(404).send({ message: 'Visit not found for the current month and year' });
+    }
+
+    const vitals = await Vitals.findOne({ book_no, timestamp: currentMonthYear });
+    if(!vitals) {
+      return res.status(404).send({ message: 'Vitals not found for the current month and year' });
+    }
+
+    if(patient.patient_age < 12 && (!vitals.rbs || !vitals.bp))
+    {
+      
+        return res.status(400).send({ message: 'Vitals data is incomplete for assigning a doctor' });
+    }else if(!vitals.rbs || !vitals.bp || !vitals.pulse || !vitals.weight || !vitals.height || !vitals.extra_note){
+      return res.status(400).send({ message: 'Vitals data is incomplete for assigning a doctor' });
     }
 
     const previousDoctorId = patientHistory.visits[visitIndex].doctor_id;
