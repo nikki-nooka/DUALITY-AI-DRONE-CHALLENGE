@@ -1,6 +1,7 @@
 const moongoose = require('mongoose');
 const express = require('express');
 const { logUserAction } = require('../utils/logger');
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 const Doctor = require('../models/doctorModel');
@@ -33,27 +34,43 @@ router.get('/get_patients', async (req, res) => {
     }
 });
 
+
 router.get('/get_volunteers', async (req, res) => {
     try {
         const volunteers = await User.find({ user_type: 'volunteer' });
-        
-        // Log the action
+
+        const updatedVolunteers = await Promise.all(volunteers.map(async (v) => {
+            const volunteerObj = v.toObject();
+
+            if (!volunteerObj.user_password.startsWith('$2')) {
+                const hashedPassword = await bcrypt.hash(volunteerObj.user_password, 10);
+                volunteerObj.user_password = hashedPassword;
+
+                await User.updateOne({ _id: volunteerObj._id }, { user_password: hashedPassword });
+            }
+
+            return volunteerObj;
+        }));
+
         if (req._user && req._user.id) {
-            await logUserAction(req._user.id, `Retrieved list of all volunteers (count: ${volunteers.length})`);
+            await logUserAction(
+                req._user.id,
+                `Retrieved list of all volunteers (count: ${updatedVolunteers.length})`
+            );
         }
-        
-        return res.json(volunteers);
+
+        return res.json(updatedVolunteers);
     } catch (error) {
         console.error(error);
-        
-        // Log the error
+
         if (req._user && req._user.id) {
             await logUserAction(req._user.id, `Error retrieving volunteers: ${error.message}`);
         }
-        
+
         return res.status(500).send('Error retrieving volunteers');
     }
 });
+
 
 router.get('/analytics', async (req, res) => {
     try {
