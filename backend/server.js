@@ -32,8 +32,8 @@ const queueRoutes = require('./routes/queueRoutes');
 const app = express();
 app.use(express.json());
 app.use(cors({
-  // origin: 'https://medical-camp.apps.swecha.org', // or your frontend domain
-  origin: 'http://localhost:3000',// or your frontend domain
+  origin: 'https://medical-camp.apps.swecha.org', // or your frontend domain
+  // origin: 'http://localhost:3000',// or your frontend domain
   credentials: true
 }));
 
