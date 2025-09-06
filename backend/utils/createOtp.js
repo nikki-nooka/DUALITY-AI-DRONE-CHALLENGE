@@ -18,7 +18,7 @@ const sendOtpRequest = async (otp, mobile) => {
         entityId: "1401456660000019917",
         templateId: "1407171385049807297",
         destinationNumber: mobile,
-        smsText: `Your Mobile Verification OTP for Swecha Telugu Corpus Collection is: ${otp}`,
+        smsText: `Your Mobile Verification OTP for Swecha Medical Camp Applicatin is: ${otp}`,
         apiKey: process.env.SMS_API_KEY,
         smsType: "SMS_TRANS",
         senderId: "SWECHA",
