@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs'); // Add this for password hashing
 const { logUserAction } = require('../utils/logger');
 const bcrypt = require('bcryptjs');
 const OTP = require('../models/otpModel');
@@ -96,8 +95,9 @@ router.post('/signup-send-otp', async (req, res) => {
         const existingUser = await User.findOne({ $or: [{ user_email }, { user_phone_no }] });
         if (existingUser) return res.status(400).json({ message: 'Email or phone number already exists.' });
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(user_password, salt);
+        // const salt = await bcrypt.genSalt(10);
+        // const hashedPassword = await bcrypt.hash(user_password, salt);
+        hashedPassword = user_password
         const otp = generateOtp();
 
       console.log(otp)
