@@ -10,7 +10,7 @@ const authMiddleware = async (req, res, next) => {
         const token = authHeader && authHeader.split(' ')[1]; // Extract token from "Bearer TOKEN"
         
         // Skip token validation for login/public routes
-        if (req.path === '/api/auth/login' || req.method === 'OPTIONS') {
+        if (req.path === '/api/auth/login' || req.path === "/api/auth/verify-otp" || req.path === "/api/auth/add-volunteer" || req.method === 'OPTIONS') {
             return next();
         }
         

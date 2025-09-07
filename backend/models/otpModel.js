@@ -1,33 +1,31 @@
 const mongoose = require('mongoose');
 
 const OTPSchema = new mongoose.Schema({
-    user_id: {
-        type: Number,
+    // We identify the record by phone number, not a user_id
+    phone_number: {
+        type: String,
         required: true,
-        ref: 'User'
+        unique: true // Good practice to ensure only one OTP per number
     },
     otp: {
         type: String,
         required: true
     },
-    phone_number: {
-        type: String,
-        required: true
+    // FIX: Temporarily store user data here instead of requiring a user_id
+    userData: {
+        user_name: { type: String, required: true },
+        user_email: { type: String, required: true },
+        user_age: { type: Number, required: true },
+        user_password: { type: String, required: true }, // This will be the HASHED password
     },
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: 300 // TTL: Document will be automatically deleted after 5 minutes (300 seconds)
-    },
-    isUsed: {
-        type: Boolean,
-        default: false
+        // The document will be automatically deleted after 5 minutes (300 seconds)
+        expires: 300
     }
 });
 
-// Create a TTL index on createdAt field
-OTPSchema.index({ createdAt: 1 }, { expireAfterSeconds: 300 });
-
 const OTP = mongoose.model('OTP', OTPSchema);
 
-module.exports = OTP; 
+module.exports = OTP;
