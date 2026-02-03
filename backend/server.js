@@ -10,6 +10,13 @@ require('./models/inventoryModel');
 require('./models/patientHistoryModel');
 require('./models/vitalsModel');
 require('./models/doctorModel');
+require('./models/airportModel');
+require('./models/aircraftModel');
+require('./models/routeModel');
+require('./models/flightModel');
+require('./models/passengerModel');
+require('./models/bookingModel');
+require('./models/crewMemberModel');
 
 
 // Middleware
@@ -28,6 +35,7 @@ const logRoutes = require('./routes/logRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const queueRoutes = require('./routes/queueRoutes');
 const tokenRoutes = require('./routes/token')
+const airlineRoutes = require('./routes/airlineRoutes');
 
 
 const app = express();
@@ -55,6 +63,7 @@ app.use('/api/logs', logRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/queue', queueRoutes);
 app.use('/api', tokenRoutes)
+app.use('/api/airline', airlineRoutes);
 
 const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

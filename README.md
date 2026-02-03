@@ -26,6 +26,8 @@
 
 This project provides a digital platform for managing SWECHA’s monthly medical camps, enabling volunteers and administrators to register patients, record vitals, assign doctors, manage prescriptions, dispense medicines, and track inventory in real time. The system ensures efficient workflows, accurate record-keeping, and transparent logging.
 
+An additional airline management module is available in the backend, providing foundational CRUD APIs for airline operations such as airports, aircraft, routes, flights, passengers, bookings, and crew. See `docs/airline-management.md` for details.
+
 ---
 
 ## Features
@@ -259,5 +261,6 @@ By contributing to this project, you agree that your contributions will be licen
 * Nikhil Sivakumar (2023114018)
 
 Special thanks to all contributors and testers for their valuable feedback.
-#   1 5 - 0 9 - 2 0 2 5  
+ 
+ 
  
