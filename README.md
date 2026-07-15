@@ -8,21 +8,20 @@
 
 ---
 
-## 📌 Project Overview
+## 📌 Overview
 
-Reliable drone detection is challenging when aerial targets are small, distant, partially occluded, or visually similar to birds.
+Reliable drone detection is difficult when aerial targets are small, distant, partially occluded, or visually similar to birds.
 
-This project develops an end-to-end object detection pipeline for detecting **drones in Electro-Optical (EO) imagery** while explicitly modeling **birds as a separate confuser class**.
+This project develops an end-to-end object detection pipeline for detecting **drones in Electro-Optical imagery** while explicitly modeling **birds as a separate confuser class**.
 
-The project combines:
+The workflow combines:
 
-- Synthetic-data-driven dataset preparation using the Duality AI Falcon ecosystem
-- Drone and bird object detection
+- Synthetic data preparation using the Duality AI Falcon ecosystem
 - YOLO-format annotation processing
 - YOLO11n model training
 - Quantitative validation
 - Confusion-matrix analysis
-- Precision, Recall, F1, and PR curve analysis
+- Precision–Recall and F1 analysis
 - Ground-truth and prediction visualization
 - Lightweight model packaging for future deployment experiments
 
@@ -37,7 +36,7 @@ with a final model size of approximately **5.19 MB**.
 
 ---
 
-# 🎯 Problem Statement
+## 🎯 Problem Statement
 
 Drone detection in EO imagery presents several challenges:
 
@@ -49,7 +48,7 @@ Drone detection in EO imagery presents several challenges:
 
 A drone-only detector may incorrectly classify visually similar airborne objects as drones.
 
-To address this problem, the final detection task was formulated as a **two-class object detection problem**:
+To address this, the final detection task was formulated as a **two-class object detection problem**:
 
 | Class ID | Class |
 |---|---|
@@ -60,7 +59,7 @@ Birds were intentionally included as a separate class so that the model could le
 
 ---
 
-# 🧠 Key Idea
+## 🧠 Key Idea
 
 Instead of asking the model only:
 
@@ -74,7 +73,7 @@ This explicit two-class formulation provides the model with supervised examples 
 
 ---
 
-# 🔄 Complete Project Pipeline
+## 🔄 Project Pipeline
 
 ```text
 Duality AI Falcon
@@ -106,7 +105,7 @@ Final EO Detection Model
 
 ---
 
-# 🛰️ Synthetic Data and Duality AI Falcon
+## 🛰️ Synthetic Data and Duality AI Falcon
 
 The project uses a synthetic-data-driven workflow associated with the Duality AI Falcon environment.
 
@@ -129,9 +128,9 @@ The objective was to build a detector capable of learning useful visual represen
 
 ---
 
-# 📊 Dataset
+## 📊 Dataset
 
-## Final Dataset Summary
+### Final Dataset Summary
 
 | Split | Images | Label Files |
 |---|---:|---:|
@@ -143,15 +142,12 @@ The dataset follows the standard YOLO object detection structure:
 
 ```text
 combined_eo_v2/
-│
 ├── train/
 │   ├── images/
 │   └── labels/
-│
 ├── val/
 │   ├── images/
 │   └── labels/
-│
 └── data.yaml
 ```
 
@@ -167,7 +163,7 @@ Bounding-box coordinates are normalized relative to image dimensions.
 
 ---
 
-# 🔍 Dataset Verification
+## 🔍 Dataset Verification
 
 Before final model evaluation, the dataset was programmatically verified.
 
@@ -202,7 +198,7 @@ Ground-truth annotations were also visualized to manually verify bounding-box pl
 
 ---
 
-# 🖼️ Training Data Characteristics
+## 🖼️ Training Data Characteristics
 
 The final training dataset contains:
 
@@ -219,11 +215,11 @@ The inclusion of both classes creates a more challenging detection task than sim
 
 ---
 
-# 🤖 Model Architecture
+## 🤖 Model Architecture
 
 The final detector uses **YOLO11n**, the lightweight nano variant of the YOLO11 family.
 
-## Model Characteristics
+### Model Characteristics
 
 | Property | Value |
 |---|---|
@@ -245,7 +241,7 @@ YOLO11n was selected because it provides a practical balance between:
 
 ---
 
-# 🏋️ Model Training
+## 🏋️ Model Training
 
 The training workflow consisted of:
 
@@ -268,7 +264,7 @@ The original best checkpoint was preserved and renamed for clear final-project o
 
 ---
 
-# 📈 Final Validation Results
+## 📈 Final Validation Results
 
 The final YOLO11n model was evaluated on the held-out validation split.
 
@@ -290,15 +286,15 @@ mAP@0.50–0.95   : 64.73%
 
 ---
 
-# 📉 Results Interpretation
+## 📉 Results Interpretation
 
-## Precision — 94.45%
+### Precision — 94.45%
 
 The model achieved high precision, indicating that the majority of predicted detections corresponded to valid target objects.
 
 This suggests relatively strong control over false-positive detections.
 
-## Recall — 85.58%
+### Recall — 85.58%
 
 The model successfully detected most annotated objects in the validation dataset.
 
@@ -309,11 +305,11 @@ The lower recall compared with precision indicates that some challenging targets
 - Partially occluded objects
 - Targets near complex backgrounds
 
-## mAP@0.50 — 90.53%
+### mAP@0.50 — 90.53%
 
 The high mAP@0.50 demonstrates strong overall object detection capability at the standard IoU threshold.
 
-## mAP@0.50–0.95 — 64.73%
+### mAP@0.50–0.95 — 64.73%
 
 This metric evaluates detection performance across increasingly strict localization thresholds.
 
@@ -321,7 +317,7 @@ The result indicates solid overall detection performance while also highlighting
 
 ---
 
-# 🔀 Confusion Matrix Analysis
+## 🔀 Confusion Matrix Analysis
 
 The normalized confusion matrix showed strong class-level discrimination.
 
@@ -336,7 +332,7 @@ This supports the decision to explicitly include birds as a separate training cl
 
 ---
 
-# 📊 Evaluation Artifacts
+## 📊 Evaluation Artifacts
 
 The project generates and analyzes the following evaluation artifacts:
 
@@ -362,7 +358,7 @@ These artifacts provide both quantitative and qualitative evidence of model perf
 
 ---
 
-# ⚡ Model Efficiency
+## ⚡ Model Efficiency
 
 The final model is intentionally lightweight.
 
@@ -385,11 +381,9 @@ Actual end-to-end latency depends on preprocessing, postprocessing, hardware, im
 
 ---
 
-# 🧪 Experimental Environments
+## 🧪 Experimental Environments
 
-The project was developed and evaluated across two environments.
-
-## Local Training and Testing
+### Local Training and Testing
 
 ```text
 Platform    : macOS
@@ -399,7 +393,7 @@ Framework   : Ultralytics
 Model       : YOLO11n
 ```
 
-## Google Colab Validation and Documentation
+### Google Colab Validation and Documentation
 
 ```text
 Environment : Google Colab
@@ -412,7 +406,7 @@ The final trained checkpoint was uploaded to Google Drive and loaded in the Cola
 
 ---
 
-# 💻 Installation
+## 💻 Installation
 
 Clone the repository:
 
@@ -447,7 +441,7 @@ python3 -c "import ultralytics; print(ultralytics.__version__)"
 
 ---
 
-# 🚀 Model Validation
+## 🚀 Model Validation
 
 Validate the final model:
 
@@ -470,7 +464,7 @@ yolo detect val \
 
 ---
 
-# 🔮 Run Inference
+## 🔮 Run Inference
 
 Run inference on a folder of images:
 
@@ -501,21 +495,17 @@ yolo detect predict \
 
 ---
 
-# 📁 Recommended Repository Structure
+## 📁 Recommended Repository Structure
 
 ```text
 duality-drone-detection/
-│
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-│
 ├── models/
 │   └── final_eo_model.pt
-│
 ├── notebooks/
 │   └── Duality_AI_Drone_Detection_Nikshith.ipynb
-│
 ├── results/
 │   ├── BoxF1_curve.png
 │   ├── BoxPR_curve.png
@@ -524,37 +514,33 @@ duality-drone-detection/
 │   ├── confusion_matrix.png
 │   ├── confusion_matrix_normalized.png
 │   └── prediction_samples/
-│
-├── scripts/
-│   └── README.md
-│
 └── docs/
     └── project_report.pdf
 ```
 
-> The complete dataset may be hosted externally rather than committed directly to GitHub if its size is unsuitable for normal Git version control.
+> The complete dataset may be hosted externally rather than committed directly to GitHub if its size is unsuitable for Git version control.
 
 ---
 
-# 🔗 Project Resources
+## 🔗 Project Resources
 
-## Training Dataset
+### Training Dataset
+[Google Drive Dataset Link](https://drive.google.com/drive/folders/1MRr5xZdNp9VSPerDJfAYZFhXEkAsjNzF?usp=sharing)
 
-**Dataset Link:**  
-` https://drive.google.com/drive/folders/1MRr5xZdNp9VSPerDJfAYZFhXEkAsjNzF?usp=sharing`
+### Google Colab / Jupyter Notebook
+[Colab Notebook Link](https://colab.research.google.com/drive/12KS08GwfEkUjp84FA7NwRv6IUyVN3z3p?usp=sharing)
 
-## Google Colab / Jupyter Notebook
+### GitHub Profile
+[github.com/nikki-nooka](https://github.com/nikki-nooka)
 
-**Notebook Link:**  
-`https://colab.research.google.com/drive/12KS08GwfEkUjp84FA7NwRv6IUyVN3z3p?usp=sharing`
-
-## Final Trained Model
+### LinkedIn Profile
+[linkedin.com/in/nikshith-nooka-2580302a7](https://www.linkedin.com/in/nikshith-nooka-2580302a7/)
 
 ---
 
-# 💡 Key Design Decisions
+## 💡 Key Design Decisions
 
-## Why YOLO11n?
+### Why YOLO11n?
 
 YOLO11n provides a strong balance between:
 
@@ -565,7 +551,7 @@ YOLO11n provides a strong balance between:
 
 This makes it suitable for experimentation with lightweight aerial object detection.
 
-## Why Include Birds?
+### Why Include Birds?
 
 Birds are a major visual confuser in drone detection.
 
@@ -583,13 +569,13 @@ rather than only:
 Drone ↔ Background
 ```
 
-## Why 512 × 512?
+### Why 512 × 512?
 
 A 512 × 512 evaluation resolution was selected as an efficiency-oriented configuration that retains useful spatial information while reducing computational requirements compared with larger resolutions.
 
 ---
 
-# ⚠️ Limitations
+## ⚠️ Limitations
 
 The current system has several limitations:
 
@@ -605,7 +591,7 @@ The reported results should therefore be interpreted as performance on the curre
 
 ---
 
-# 🔭 Future Work
+## 🔭 Future Work
 
 Future improvements could include:
 
@@ -633,7 +619,7 @@ Balloons
 
 ---
 
-# 🏆 Final Results Summary
+## 🏆 Final Results Summary
 
 ```text
 Dataset Size      : 1,962 images
@@ -653,7 +639,7 @@ mAP@0.50–0.95     : 64.73%
 
 ---
 
-# 🎓 Project Context
+## 🎓 Project Context
 
 This project was developed as part of the:
 
@@ -663,20 +649,17 @@ using the **Duality AI Falcon** ecosystem for the challenge workflow.
 
 ---
 
-# 👨‍💻 Author
+## 👨‍💻 Author
 
-## Nooka Nikshith
+**Nooka Nikshith**  
+AI/ML Developer | B.Tech Artificial Intelligence and Machine Learning
 
-**AI/ML Developer | B.Tech Artificial Intelligence and Machine Learning**
-
-- GitHub: `<YOUR_GITHUB_PROFILE>`
-- LinkedIn: `<YOUR_LINKEDIN_PROFILE>`
+- GitHub: [nikki-nooka](https://github.com/nikki-nooka)
+- LinkedIn: [nikshith-nooka-2580302a7](https://www.linkedin.com/in/nikshith-nooka-2580302a7/)
 
 ---
 
-# 🙏 Acknowledgements
-
-Acknowledgements to:
+## 🙏 Acknowledgements
 
 - Duality AI for the Falcon simulation ecosystem and challenge environment.
 - Elite Coders Summer of Code for organizing the AI/ML track.
@@ -684,7 +667,7 @@ Acknowledgements to:
 
 ---
 
-# 📜 License and Data Usage
+## 📜 License and Data Usage
 
 The source code and original project documentation in this repository may be distributed under the license selected for this repository.
 
