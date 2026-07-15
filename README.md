@@ -541,7 +541,7 @@ duality-drone-detection/
 ## Training Dataset
 
 **Dataset Link:**  
-`<ADD_PUBLIC_GOOGLE_DRIVE_OR_DATASET_LINK>`
+` https://drive.google.com/drive/folders/1MRr5xZdNp9VSPerDJfAYZFhXEkAsjNzF?usp=sharing`
 
 ## Google Colab / Jupyter Notebook
 
@@ -551,7 +551,7 @@ duality-drone-detection/
 ## Final Trained Model
 
 **Model Link:**  
-`<ADD_MODEL_LINK_IF_HOSTED_EXTERNALLY>`
+`https://colab.research.google.com/drive/12KS08GwfEkUjp84FA7NwRv6IUyVN3z3p?usp=sharing`
 
 ---
 
