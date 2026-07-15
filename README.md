@@ -546,12 +546,9 @@ duality-drone-detection/
 ## Google Colab / Jupyter Notebook
 
 **Notebook Link:**  
-`<ADD_PUBLIC_COLAB_OR_GOOGLE_DRIVE_NOTEBOOK_LINK>`
+`https://colab.research.google.com/drive/12KS08GwfEkUjp84FA7NwRv6IUyVN3z3p?usp=sharing`
 
 ## Final Trained Model
-
-**Model Link:**  
-`https://colab.research.google.com/drive/12KS08GwfEkUjp84FA7NwRv6IUyVN3z3p?usp=sharing`
 
 ---
 
